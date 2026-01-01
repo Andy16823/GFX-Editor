@@ -8,7 +8,7 @@ using LibGFX.Graphics;
 
 namespace NewGFXEditor.Shader
 {
-    public class GizmoShader : ShaderProgram
+    public class GizmoShader : RenderShader
     {
         public GizmoShader()
         {

@@ -78,7 +78,7 @@ namespace NewGFXEditor.Editor
         /// <summary>
         /// Gets or sets the shader program used for rendering the gizmo.
         /// </summary>
-        public ShaderProgram Shader { get; set; } = new GizmoShader();
+        public RenderShader Shader { get; set; } = new GizmoShader();
 
         /// <summary>
         /// Gets or sets the currently active axis for the gizmo operation.
@@ -173,7 +173,7 @@ namespace NewGFXEditor.Editor
         /// <param name="viewport"></param>
         public void Init(IRenderDevice renderDevice, Viewport viewport)
         {
-            renderDevice.BuildShaderProgram(this.Shader);
+            renderDevice.BuildRenderShader(this.Shader);
             this.GizmoModel.Init(renderDevice);
         }
         
@@ -208,7 +208,7 @@ namespace NewGFXEditor.Editor
         public void Dispose(IRenderDevice renderDevice)
         {
             this.GizmoModel.Dispose(renderDevice);
-            renderDevice.DisposeShaderProgram(this.Shader);
+            renderDevice.DisposeRenderShader(this.Shader);
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ using LibGFX.Graphics;
 
 namespace NewGFXEditor.Shader
 {
-    public class ColorIDShader : ShaderProgram
+    public class ColorIDShader : RenderShader
     {
         public ColorIDShader()
         {

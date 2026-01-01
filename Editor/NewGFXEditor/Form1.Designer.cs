@@ -106,7 +106,6 @@
             einfügenToolStripButton = new ToolStripButton();
             toolStripSeparator7 = new ToolStripSeparator();
             hilfeToolStripButton = new ToolStripButton();
-            layerComboBox = new ToolStripComboBox();
             toolStripSeparator9 = new ToolStripSeparator();
             gizmoModeTranslateBtn = new ToolStripButton();
             gizmoModeScaleBtn = new ToolStripButton();
@@ -176,7 +175,7 @@
             neuToolStripMenuItem.ImageTransparentColor = Color.Magenta;
             neuToolStripMenuItem.Name = "neuToolStripMenuItem";
             neuToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.N;
-            neuToolStripMenuItem.Size = new Size(180, 22);
+            neuToolStripMenuItem.Size = new Size(148, 22);
             neuToolStripMenuItem.Text = "New";
             neuToolStripMenuItem.Click += neuToolStripMenuItem_Click;
             // 
@@ -186,14 +185,14 @@
             öffnenToolStripMenuItem.ImageTransparentColor = Color.Magenta;
             öffnenToolStripMenuItem.Name = "öffnenToolStripMenuItem";
             öffnenToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
-            öffnenToolStripMenuItem.Size = new Size(180, 22);
+            öffnenToolStripMenuItem.Size = new Size(148, 22);
             öffnenToolStripMenuItem.Text = "Open";
             öffnenToolStripMenuItem.Click += öffnenToolStripMenuItem_Click;
             // 
             // toolStripSeparator
             // 
             toolStripSeparator.Name = "toolStripSeparator";
-            toolStripSeparator.Size = new Size(177, 6);
+            toolStripSeparator.Size = new Size(145, 6);
             // 
             // speichernToolStripMenuItem
             // 
@@ -201,32 +200,32 @@
             speichernToolStripMenuItem.ImageTransparentColor = Color.Magenta;
             speichernToolStripMenuItem.Name = "speichernToolStripMenuItem";
             speichernToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
-            speichernToolStripMenuItem.Size = new Size(180, 22);
+            speichernToolStripMenuItem.Size = new Size(148, 22);
             speichernToolStripMenuItem.Text = "Save";
             // 
             // speichernunterToolStripMenuItem
             // 
             speichernunterToolStripMenuItem.Name = "speichernunterToolStripMenuItem";
-            speichernunterToolStripMenuItem.Size = new Size(180, 22);
+            speichernunterToolStripMenuItem.Size = new Size(148, 22);
             speichernunterToolStripMenuItem.Text = "Save As";
             speichernunterToolStripMenuItem.Click += speichernunterToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(177, 6);
+            toolStripSeparator1.Size = new Size(145, 6);
             // 
             // importToolStripMenuItem
             // 
             importToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { gFXLevelFileToolStripMenuItem1 });
             importToolStripMenuItem.Name = "importToolStripMenuItem";
-            importToolStripMenuItem.Size = new Size(180, 22);
+            importToolStripMenuItem.Size = new Size(148, 22);
             importToolStripMenuItem.Text = "Import";
             // 
             // gFXLevelFileToolStripMenuItem1
             // 
             gFXLevelFileToolStripMenuItem1.Name = "gFXLevelFileToolStripMenuItem1";
-            gFXLevelFileToolStripMenuItem1.Size = new Size(180, 22);
+            gFXLevelFileToolStripMenuItem1.Size = new Size(129, 22);
             gFXLevelFileToolStripMenuItem1.Text = "GFX Scene";
             gFXLevelFileToolStripMenuItem1.Click += gFXLevelFileToolStripMenuItem1_Click;
             // 
@@ -234,25 +233,25 @@
             // 
             exportToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { gFXLevelFileToolStripMenuItem });
             exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            exportToolStripMenuItem.Size = new Size(180, 22);
+            exportToolStripMenuItem.Size = new Size(148, 22);
             exportToolStripMenuItem.Text = "Export";
             // 
             // gFXLevelFileToolStripMenuItem
             // 
             gFXLevelFileToolStripMenuItem.Name = "gFXLevelFileToolStripMenuItem";
-            gFXLevelFileToolStripMenuItem.Size = new Size(180, 22);
+            gFXLevelFileToolStripMenuItem.Size = new Size(129, 22);
             gFXLevelFileToolStripMenuItem.Text = "GFX Scene";
             gFXLevelFileToolStripMenuItem.Click += gFXLevelFileToolStripMenuItem_Click;
             // 
             // toolStripSeparator14
             // 
             toolStripSeparator14.Name = "toolStripSeparator14";
-            toolStripSeparator14.Size = new Size(177, 6);
+            toolStripSeparator14.Size = new Size(145, 6);
             // 
             // beendenToolStripMenuItem
             // 
             beendenToolStripMenuItem.Name = "beendenToolStripMenuItem";
-            beendenToolStripMenuItem.Size = new Size(180, 22);
+            beendenToolStripMenuItem.Size = new Size(148, 22);
             beendenToolStripMenuItem.Text = "&Beenden";
             // 
             // bearbeitenToolStripMenuItem
@@ -596,7 +595,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { neuToolStripButton, öffnenToolStripButton, speichernToolStripButton, druckenToolStripButton, toolStripSeparator6, ausschneidenToolStripButton, kopierenToolStripButton, einfügenToolStripButton, toolStripSeparator7, hilfeToolStripButton, layerComboBox, toolStripSeparator9, gizmoModeTranslateBtn, gizmoModeScaleBtn, gizmoModeRotateBtn, toolStripSeparator17, toolStripButton1 });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { neuToolStripButton, öffnenToolStripButton, speichernToolStripButton, druckenToolStripButton, toolStripSeparator6, ausschneidenToolStripButton, kopierenToolStripButton, einfügenToolStripButton, toolStripSeparator7, hilfeToolStripButton, toolStripSeparator9, gizmoModeTranslateBtn, gizmoModeScaleBtn, gizmoModeRotateBtn, toolStripSeparator17, toolStripButton1 });
             toolStrip1.Location = new Point(0, 24);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1433, 25);
@@ -685,13 +684,6 @@
             hilfeToolStripButton.Name = "hilfeToolStripButton";
             hilfeToolStripButton.Size = new Size(23, 22);
             hilfeToolStripButton.Text = "Hi&lfe";
-            // 
-            // layerComboBox
-            // 
-            layerComboBox.Alignment = ToolStripItemAlignment.Right;
-            layerComboBox.Name = "layerComboBox";
-            layerComboBox.Size = new Size(121, 25);
-            layerComboBox.SelectedIndexChanged += layerComboBox_SelectedIndexChanged;
             // 
             // toolStripSeparator9
             // 
@@ -1047,7 +1039,6 @@
         private ToolStripMenuItem cubeToolStripMenuItem;
         private ToolStripMenuItem sphereToolStripMenuItem;
         private ToolStripMenuItem quadToolStripMenuItem;
-        private ToolStripComboBox layerComboBox;
         private ToolStripMenuItem selectionToolStripMenuItem;
         private ToolStripMenuItem editPositionToolStripMenuItem;
         private ToolStripMenuItem editRotationToolStripMenuItem;

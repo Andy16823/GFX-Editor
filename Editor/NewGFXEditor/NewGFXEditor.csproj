@@ -35,10 +35,17 @@
     <None Update="Assets\Gizmos\Transform\TransformGizmo.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\Shader\Raycaster.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Update="StirlingLabs.assimp.native.win-x64" Version="5.2.5.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Shader\" />
   </ItemGroup>
 
 </Project>
