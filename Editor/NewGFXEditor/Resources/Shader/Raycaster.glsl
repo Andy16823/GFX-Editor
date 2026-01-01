@@ -10,6 +10,7 @@ struct HitResult
 {
     int triangleIndex;
     vec4 normal;
+    vec4 position;
 };
 
 layout(std430, binding = 0) readonly buffer Positions
@@ -78,6 +79,7 @@ void main()
                 closestT = t;
                 result.triangleIndex = i / 3;
                 result.normal = vec4(normal, t);
+                result.position = vec4(ro + rd * t, 1.0);
             }
         }
     }

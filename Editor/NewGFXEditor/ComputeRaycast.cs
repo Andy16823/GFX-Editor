@@ -18,15 +18,21 @@ using Mesh = LibGFX.Graphics.Mesh;
 
 namespace NewGFXEditor
 {
-    struct HitResult
+    [StructLayout(LayoutKind.Sequential)]
+    public struct HitResult
     {
         public int TriangleIndex;
-        public Vector4 normal;
+
+        // std430 padding (int → vec4)
+        private Vector3 _padding;
+
+        public Vector4 Normal;   // xyz = normal, w = t
+        public Vector4 Position; // xyz = mesh-space position
     }
 
     public class ComputeRaycast
     {
-        public static void PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader)
+        public static HitResult PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader, out Vector3 worldPos)
         {
             Vector3[] positions = new Vector3[mesh.Vertices.Count];
             for (int i = 0; i < positions.Length; i++)
@@ -60,10 +66,13 @@ namespace NewGFXEditor
             }
             else
             {
-                Debug.WriteLine($"Hit detected: Triangle {hit.TriangleIndex}, Normal {hit.normal}");
+                Debug.WriteLine($"Hit detected: Triangle {hit.TriangleIndex}, Normal {hit.Normal}, Position {hit.Position}");
             }
             renderer.DisposeBuffer(hitBuffer);
             renderer.DisposeBuffer(positionsBuffer);
+            worldPos = Vector3.TransformPosition(new Vector3(hit.Position.X, hit.Position.Y, hit.Position.Z), modelMatrix);
+
+            return hit;
         }
     }
 }

@@ -75,6 +75,7 @@ namespace NewGFXEditor
         private PhysicsHandler3D _phyisicHandler3D;
         private bool _sceneEnabled = true;
         private ComputeShader _computeShader;
+        private Primitive _debugSphere;
 
         /// <summary>
         /// Initializes a new instance of the Form1 class and sets up the 3D editor panel and related event handlers.
@@ -405,7 +406,12 @@ namespace NewGFXEditor
                     // Check each mesh for intersection
                     foreach (var mesh in meshes)
                     {
-                        ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader);
+                        var worldPos = Vector3.Zero;
+                        var test = ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader, out worldPos);
+                        if(test.TriangleIndex >= 0)
+                        {
+                            _debugSphere.Transform.Position = worldPos;
+                        }
 
                         // Perform ray-mesh intersection test
                         var hit = MeshRaycast.IntersectsMesh(ray, element.Transform, mesh);
@@ -558,7 +564,14 @@ namespace NewGFXEditor
             // Create an defaul material and add it to the asset manager
             // Create an defaul material and add it to the asset manager
             var blankMaterial = new SGMaterial("e_BlankMaterial", Vector4.One);
-            AssetManager.Add<SGMaterial>(blankMaterial.Name, blankMaterial);
+            AssetManager.Add<SGMaterial>(blankMaterial);
+
+            var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1));
+            AssetManager.Add<SGMaterial>(debugMaterial);
+
+            _debugSphere = Primitive.CreatePrimitive("DebugSphere", debugMaterial, AssetManager, Primitive.PrimitiveType.Sphere);
+            _debugSphere.Transform.Scale = new Vector3(0.2f);
+            scene3d.AddGameElement(_debugSphere);
 
             // Create a cube and add it to the scene
             //var cube = this.CreateCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1), Vector3.Zero, blankMaterial);
