@@ -6,6 +6,12 @@ uniform vec3 rayDir;
 
 uniform mat4 invModelMatrix;
 
+struct HitResult
+{
+    int triangleIndex;
+    vec4 normal;
+};
+
 layout(std430, binding = 0) readonly buffer Positions
 {
     vec3 positions[];
@@ -18,10 +24,10 @@ layout(std430, binding = 1) readonly buffer IndexBuffer
 
 layout(std430, binding = 2) writeonly buffer Result
 {
-    int hit;
+    HitResult result;
 };
 
-bool intersectTriangle(vec3 ro, vec3 rd, vec3 v0, vec3 v1, vec3 v2)
+bool intersectTriangle(vec3 ro, vec3 rd, vec3 v0, vec3 v1, vec3 v2, out float t, out vec3 normal)
 {
     const float EPS = 1e-6;
 
@@ -42,13 +48,17 @@ bool intersectTriangle(vec3 ro, vec3 rd, vec3 v0, vec3 v1, vec3 v2)
     float v = dot(rd, q) * invDet;
     if (v < 0.0 || u + v > 1.0) return false;
 
-    float t = dot(e2, q) * invDet;
-    return t > EPS;
+    t = dot(e2, q) * invDet;
+    if(t <= EPS) return false;
+
+    normal = normalize(cross(e1, e2));
+    return true;
 }
 
 void main()
 {
-    hit = 0;
+    float closestT = 1e20;
+    result.triangleIndex = -1;
 
     vec3 ro = (invModelMatrix * vec4(rayOrigin, 1.0)).xyz;
     vec3 rd = normalize((invModelMatrix * vec4(rayDir, 0.0)).xyz);
@@ -59,10 +69,16 @@ void main()
         vec3 v1 = positions[indices[i + 1]];
         vec3 v2 = positions[indices[i + 2]];
 
-        if (intersectTriangle(ro, rd, v0, v1, v2))
+        float t;
+        vec3 normal;
+        if (intersectTriangle(ro, rd, v0, v1, v2, t, normal))
         {
-            hit = 1;
-            return;
+            if (t < closestT)
+            {
+                closestT = t;
+                result.triangleIndex = i / 3;
+                result.normal = vec4(normal, t);
+            }
         }
     }
 }

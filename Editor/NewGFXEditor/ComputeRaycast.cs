@@ -18,6 +18,12 @@ using Mesh = LibGFX.Graphics.Mesh;
 
 namespace NewGFXEditor
 {
+    struct HitResult
+    {
+        public int TriangleIndex;
+        public Vector4 normal;
+    }
+
     public class ComputeRaycast
     {
         public static void PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader)
@@ -33,7 +39,7 @@ namespace NewGFXEditor
             Matrix4 invModelMatrix = modelMatrix.Inverted();
 
             int hitBuffer = renderer.CreateBuffer();
-            renderer.SetBufferData<int>(hitBuffer, new int[1], RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.DynamicRead);
+            renderer.SetBufferData<HitResult>(hitBuffer, new HitResult[1], RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.DynamicRead);
 
             renderer.BindShaderProgram(shader);
             renderer.PrepareShader("rayOrigin", rayrayOrigin);
@@ -47,14 +53,14 @@ namespace NewGFXEditor
             renderer.DispatchCompute(1, 1, 1);
             renderer.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit);
 
-            int hit = renderer.GetBufferData<int>(hitBuffer, 1, RenderFlags.GFXBufferTarget.ShaderStorageBuffer)[0];
-            if(hit == 0)
+            HitResult hit = renderer.GetBufferData<HitResult>(hitBuffer, 1, RenderFlags.GFXBufferTarget.ShaderStorageBuffer)[0];
+            if(hit.TriangleIndex == -1)
             {
                 Debug.WriteLine("No hit detected.");
             }
             else
             {
-                Debug.WriteLine("Hit detected");
+                Debug.WriteLine($"Hit detected: Triangle {hit.TriangleIndex}, Normal {hit.normal}");
             }
             renderer.DisposeBuffer(hitBuffer);
             renderer.DisposeBuffer(positionsBuffer);
