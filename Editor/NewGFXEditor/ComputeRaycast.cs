@@ -18,16 +18,15 @@ using Mesh = LibGFX.Graphics.Mesh;
 
 namespace NewGFXEditor
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit, Size = 48)]
     public struct HitResult
     {
+        [FieldOffset(0)]
         public int TriangleIndex;
-
-        // std430 padding (int → vec4)
-        private Vector3 _padding;
-
-        public Vector4 Normal;   // xyz = normal, w = t
-        public Vector4 Position; // xyz = mesh-space position
+        [FieldOffset(16)]
+        public Vector4 Normal;
+        [FieldOffset(32)]
+        public Vector4 Position;
     }
 
     public class ComputeRaycast
