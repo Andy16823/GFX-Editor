@@ -41,7 +41,6 @@ namespace NewGFXEditor
             renderer.SetBufferData<Vector3>(positionsBuffer, positions, RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.StaticDraw);
 
             Matrix4 modelMatrix = mesh.GetTransform() * transform.GetMatrix();
-            Matrix4 invModelMatrix = modelMatrix.Inverted();
 
             int hitBuffer = renderer.CreateBuffer();
             renderer.SetBufferData<HitResult>(hitBuffer, new HitResult[1], RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.DynamicRead);
@@ -49,7 +48,7 @@ namespace NewGFXEditor
             renderer.BindShaderProgram(shader);
             renderer.PrepareShader("rayOrigin", rayrayOrigin);
             renderer.PrepareShader("rayDir", rayDirection.Normalized());
-            renderer.PrepareShader("invModelMatrix", false, invModelMatrix);
+            renderer.PrepareShader("modelMatrix", true, modelMatrix);
 
             renderer.BindShaderStorageBuffer(0, positionsBuffer);
             renderer.BindShaderStorageBuffer(1, mesh.RenderData.IndexBuffer);

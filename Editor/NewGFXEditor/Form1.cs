@@ -410,7 +410,7 @@ namespace NewGFXEditor
                         var test = ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader, out worldPos);
                         if(test.TriangleIndex >= 0)
                         {
-                            _debugSphere.Transform.Position = worldPos;
+                            _debugSphere.Transform.Position = test.Position.Xyz;
                         }
 
                         // Perform ray-mesh intersection test

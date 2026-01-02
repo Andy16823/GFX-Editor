@@ -4,7 +4,7 @@ layout(local_size_x = 1) in;
 uniform vec3 rayOrigin;
 uniform vec3 rayDir;
 
-uniform mat4 invModelMatrix;
+uniform mat4 modelMatrix;
 
 struct HitResult
 {
@@ -65,25 +65,22 @@ void main()
     float closestT = 1e20;
     result.triangleIndex = -1;
 
-    vec3 ro = (invModelMatrix * vec4(rayOrigin, 1.0)).xyz;
-    vec3 rd = normalize((invModelMatrix * vec4(rayDir, 0.0)).xyz);
-
     for (int i = 0; i < indices.length(); i += 3)
     {
-        vec3 v0 = positions[indices[i]];
-        vec3 v1 = positions[indices[i + 1]];
-        vec3 v2 = positions[indices[i + 2]];
+        vec3 v0 = vec3(vec4(positions[indices[i]], 1.0) * modelMatrix);
+        vec3 v1 = vec3(vec4(positions[indices[i + 1]], 1.0) * modelMatrix);
+        vec3 v2 = vec3(vec4(positions[indices[i + 2]], 1.0) * modelMatrix);
 
         float t;
         vec3 normal;
-        if (intersectTriangle(ro, rd, v0, v1, v2, t, normal))
+        if (intersectTriangle(rayOrigin, rayDir, v0, v1, v2, t, normal))
         {
             if (t < closestT)
             {
                 closestT = t;
                 result.triangleIndex = i / 3;
                 result.normal = vec4(normal, t);
-                result.position = vec4(ro + rd * t, 1.0);
+                result.position = vec4(rayOrigin + rayDir * t, 1.0);
             }
         }
     }
