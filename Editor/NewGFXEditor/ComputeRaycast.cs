@@ -33,13 +33,6 @@ namespace NewGFXEditor
     {
         public static HitResult PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader)
         {
-            Vector3[] positions = new Vector3[mesh.Vertices.Count];
-            for (int i = 0; i < positions.Length; i++)
-                positions[i] = new Vector3(mesh.Vertices[i].Position);
-
-            int positionsBuffer = renderer.CreateBuffer();
-            renderer.SetBufferData<Vector3>(positionsBuffer, positions, RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.StaticDraw);
-
             Matrix4 modelMatrix = mesh.GetTransform() * transform.GetMatrix();
 
             int hitBuffer = renderer.CreateBuffer();
@@ -50,7 +43,7 @@ namespace NewGFXEditor
             renderer.PrepareShader("rayDir", rayDirection.Normalized());
             renderer.PrepareShader("modelMatrix", true, modelMatrix);
 
-            renderer.BindShaderStorageBuffer(0, positionsBuffer);
+            renderer.BindShaderStorageBuffer(0, mesh.RenderData.PositionsBuffer);
             renderer.BindShaderStorageBuffer(1, mesh.RenderData.IndexBuffer);
             renderer.BindShaderStorageBuffer(2, hitBuffer);
 
@@ -67,7 +60,6 @@ namespace NewGFXEditor
                 Debug.WriteLine($"Hit detected: Triangle {hit.TriangleIndex}, Normal {hit.Normal}, Position {hit.Position}");
             }
             renderer.DisposeBuffer(hitBuffer);
-            renderer.DisposeBuffer(positionsBuffer);
 
             return hit;
         }
