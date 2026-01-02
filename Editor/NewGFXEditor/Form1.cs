@@ -743,8 +743,9 @@ namespace NewGFXEditor
         /// <param name="e"></param>
         private void EditorPanel3D_EditorLoaded(object sender, EventArgs e)
         {
-            var computeShader = AssetManager.Load<ComputeShader>("Resources/Shader/Raycaster.glsl");
-            _computeRaycast = new ComputeRaycast(computeShader);
+            //var computeShader = AssetManager.Load<ComputeShader>("Resources/Shader/Raycaster.glsl");
+            //_computeRaycast = new ComputeRaycast(computeShader);
+            _computeRaycast = new ComputeRaycast();
 
             // Initialize the materials within the asset manager
             AssetManager.InitializeAssets(_editorPanel3D.Renderer);
