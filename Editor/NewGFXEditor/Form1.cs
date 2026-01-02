@@ -74,8 +74,11 @@ namespace NewGFXEditor
         private GameElement _selectedElement = null;
         private PhysicsHandler3D _phyisicHandler3D;
         private bool _sceneEnabled = true;
-        private ComputeShader _computeShader;
-        private Primitive _debugSphere;
+        private ComputeRaycast _computeRaycast;
+
+        // Debug sphere for raycast visualization
+        private Transform _debugSphereTransform = new Transform();
+        private bool _showDebugSphere = false;
 
         /// <summary>
         /// Initializes a new instance of the Form1 class and sets up the 3D editor panel and related event handlers.
@@ -189,7 +192,7 @@ namespace NewGFXEditor
         public Primitive CreateCube(Vector3 position, Vector3 scale, Vector3 rotation, SGMaterial material)
         {
             // Create the cube primitive
-            var cube = Primitive.CreatePrimitive("Cube", material, AssetManager, Primitive.PrimitiveType.Cube);
+            var cube = Primitive.CreatePrimitive("Cube", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Cube);
 
             // Initialize the cube's mesh
             cube.Mesh.Init(_editorPanel3D.Renderer);
@@ -212,7 +215,7 @@ namespace NewGFXEditor
         public Primitive CreateSphere(Vector3 position, Vector3 scale, Vector3 rotation, SGMaterial material)
         {
             // Create the sphere primitive
-            var sphere = Primitive.CreatePrimitive("Sphere", material, AssetManager, Primitive.PrimitiveType.Sphere);
+            var sphere = Primitive.CreatePrimitive("Sphere", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Sphere);
 
             // Initialize the sphere's mesh
             sphere.Mesh.Init(_editorPanel3D.Renderer);
@@ -235,7 +238,7 @@ namespace NewGFXEditor
         public Primitive CreateQuad(Vector3 position, Vector3 scale, Vector3 rotation, SGMaterial material)
         {
             // Create the quad primitive
-            var quad = Primitive.CreatePrimitive("Quad", material, AssetManager, Primitive.PrimitiveType.Quad);
+            var quad = Primitive.CreatePrimitive("Quad", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Quad);
 
             // Initialize the quad's mesh
             quad.Mesh.Init(_editorPanel3D.Renderer);
@@ -406,11 +409,11 @@ namespace NewGFXEditor
                     // Check each mesh for intersection
                     foreach (var mesh in meshes)
                     {
-                        var hit = ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader);
-                        if(hit.TriangleIndex >= 0 && hit.Normal.W < minDist)
+                        var hit = _computeRaycast.PerformRaycast(ray, element.Transform, mesh);
+                        if (hit.TriangleIndex >= 0 && hit.Normal.W < minDist)
                         {
                             minDist = hit.Normal.W;
-                            _debugSphere.Transform.Position = hit.Position.Xyz;
+                            _debugSphereTransform.Position = hit.Position.Xyz;
                             hitElement = element;
                         }
 
@@ -483,6 +486,11 @@ namespace NewGFXEditor
                     var aabb = element.WorldAABB;
                     _editorPanel3D.Renderer.DrawAABB(aabb, ColorPresets.LimeGreen);
                 });
+            }
+
+            if (_showDebugSphere)
+            {
+                _editorPanel3D.Renderer.DrawPrimitive(_debugSphereTransform, LibGFX.Graphics.Primitives.PrimitiveType.Sphere, ColorPresets.Magenta);
             }
         }
 
@@ -570,9 +578,8 @@ namespace NewGFXEditor
             var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1));
             AssetManager.Add<SGMaterial>(debugMaterial);
 
-            _debugSphere = Primitive.CreatePrimitive("DebugSphere", debugMaterial, AssetManager, Primitive.PrimitiveType.Sphere);
-            _debugSphere.Transform.Scale = new Vector3(0.2f);
-            scene3d.AddGameElement(_debugSphere);
+            _debugSphereTransform.Position = new Vector3(0, 0, 0);
+            _debugSphereTransform.Scale = new Vector3(0.2f);
 
             // Create a cube and add it to the scene
             //var cube = this.CreateCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1), Vector3.Zero, blankMaterial);
@@ -587,7 +594,7 @@ namespace NewGFXEditor
 
         private void Scene3d_OnRenderPassEnd(BaseScene scene, Viewport viewport, IRenderDevice renderer, Camera camera)
         {
-            if(this.ShowGrid)
+            if (this.ShowGrid)
             {
                 renderer.DrawGrid(camera, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
             }
@@ -736,7 +743,9 @@ namespace NewGFXEditor
         /// <param name="e"></param>
         private void EditorPanel3D_EditorLoaded(object sender, EventArgs e)
         {
-            _computeShader = AssetManager.Load<ComputeShader>("Resources/Shader/Raycaster.glsl");   
+            var computeShader = AssetManager.Load<ComputeShader>("Resources/Shader/Raycaster.glsl");
+            _computeRaycast = new ComputeRaycast(computeShader);
+
             // Initialize the materials within the asset manager
             AssetManager.InitializeAssets(_editorPanel3D.Renderer);
 
@@ -750,6 +759,7 @@ namespace NewGFXEditor
 
             // Initialize the transform gizmo
             TransformGizmo.Init(_editorPanel3D.Renderer, _editorPanel3D.Viewport);
+            _computeRaycast.Init(_editorPanel3D.Renderer);
         }
 
         /// <summary>
@@ -983,6 +993,7 @@ namespace NewGFXEditor
         /// cancel the event.</param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _computeRaycast.Dispose(_editorPanel3D.Renderer);
             AssetManager.DisposeAssets(_editorPanel3D.Renderer);
             Scene.DisposeScene(_editorPanel3D.Renderer);
             TransformGizmo.Dispose(_editorPanel3D.Renderer);
@@ -1158,6 +1169,7 @@ namespace NewGFXEditor
 
                 var model = new StaticModel("Model", staticMeshModel);
                 Scene.AddGameElement(model);
+                model.Init(Scene, _editorPanel3D.Viewport, _editorPanel3D.Renderer);
                 _editorPanel3D.Redraw();
                 this.UpdateGUI();
             }
@@ -1400,6 +1412,13 @@ namespace NewGFXEditor
         private void gFXAssetsToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void showRaycastPointToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _showDebugSphere = !_showDebugSphere;
+            showRaycastPointToolStripMenuItem.Checked = _showDebugSphere;
+            _editorPanel3D.Redraw();
         }
     }
 }
