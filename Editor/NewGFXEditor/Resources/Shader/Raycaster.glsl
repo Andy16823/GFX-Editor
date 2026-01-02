@@ -13,17 +13,23 @@ struct HitResult
     vec4 position;
 };
 
-layout(std430, binding = 0) readonly buffer Positions
-{
-    vec3 positions[];
+struct PackedVec3 {
+    float x;
+    float y;
+    float z;
 };
 
-layout(std430, binding = 1) readonly buffer IndexBuffer
+layout(std430, binding = 0, row_major) readonly buffer Positions
+{
+    PackedVec3 positions[];
+};
+
+layout(std430, binding = 1, row_major) readonly buffer IndexBuffer
 {
     int indices[];
 };
 
-layout(std430, binding = 2) writeonly buffer Result
+layout(std430, binding = 2, row_major) writeonly buffer Result
 {
     HitResult result;
 };
@@ -67,9 +73,9 @@ void main()
 
     for (int i = 0; i < indices.length(); i += 3)
     {
-        vec3 v0 = vec3(vec4(positions[indices[i]], 1.0) * modelMatrix);
-        vec3 v1 = vec3(vec4(positions[indices[i + 1]], 1.0) * modelMatrix);
-        vec3 v2 = vec3(vec4(positions[indices[i + 2]], 1.0) * modelMatrix);
+        vec3 v0 = vec3(vec4(positions[indices[i]].x, positions[indices[i]].y, positions[indices[i]].z, 1.0) * modelMatrix);
+        vec3 v1 = vec3(vec4(positions[indices[i + 1]].x, positions[indices[i + 1]].y, positions[indices[i + 1]].z, 1.0) * modelMatrix);
+        vec3 v2 = vec3(vec4(positions[indices[i + 2]].x, positions[indices[i + 2]].y, positions[indices[i + 2]].z, 1.0) * modelMatrix);
 
         float t;
         vec3 normal;

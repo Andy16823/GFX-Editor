@@ -406,22 +406,23 @@ namespace NewGFXEditor
                     // Check each mesh for intersection
                     foreach (var mesh in meshes)
                     {
-                        var worldPos = Vector3.Zero;
-                        var test = ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader, out worldPos);
-                        if(test.TriangleIndex >= 0)
+                        var hit = ComputeRaycast.PerformRaycast(ray.Origin, ray.Direction, element.Transform, mesh, _editorPanel3D.Renderer, _computeShader);
+                        if(hit.TriangleIndex >= 0 && hit.Normal.W < minDist)
                         {
-                            _debugSphere.Transform.Position = test.Position.Xyz;
+                            minDist = hit.Normal.W;
+                            _debugSphere.Transform.Position = hit.Position.Xyz;
+                            hitElement = element;
                         }
 
                         // Perform ray-mesh intersection test
-                        var hit = MeshRaycast.IntersectsMesh(ray, element.Transform, mesh);
+                        //var hit = MeshRaycast.IntersectsMesh(ray, element.Transform, mesh);
 
-                        // Update closest hit if necessary
-                        if (hit.Hit && hit.Distance < minDist)
-                        {
-                            minDist = hit.Distance;
-                            hitElement = element;
-                        }
+                        //// Update closest hit if necessary
+                        //if (hit.Hit && hit.Distance < minDist)
+                        //{
+                        //    minDist = hit.Distance;
+                        //    hitElement = element;
+                        //}
                     }
                 }
             }

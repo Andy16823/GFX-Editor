@@ -31,11 +31,11 @@ namespace NewGFXEditor
 
     public class ComputeRaycast
     {
-        public static HitResult PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader, out Vector3 worldPos)
+        public static HitResult PerformRaycast(Vector3 rayrayOrigin, Vector3 rayDirection, Transform transform, Mesh mesh, IRenderDevice renderer, ComputeShader shader)
         {
             Vector3[] positions = new Vector3[mesh.Vertices.Count];
             for (int i = 0; i < positions.Length; i++)
-                positions[i] = mesh.Vertices[i].Position;
+                positions[i] = new Vector3(mesh.Vertices[i].Position);
 
             int positionsBuffer = renderer.CreateBuffer();
             renderer.SetBufferData<Vector3>(positionsBuffer, positions, RenderFlags.GFXBufferTarget.ShaderStorageBuffer, RenderFlags.GFXBufferUsageHint.StaticDraw);
@@ -68,7 +68,6 @@ namespace NewGFXEditor
             }
             renderer.DisposeBuffer(hitBuffer);
             renderer.DisposeBuffer(positionsBuffer);
-            worldPos = Vector3.TransformPosition(new Vector3(hit.Position.X, hit.Position.Y, hit.Position.Z), modelMatrix);
 
             return hit;
         }
