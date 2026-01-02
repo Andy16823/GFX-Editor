@@ -30,30 +30,34 @@ layout(std430, binding = 2) writeonly buffer Result
 
 bool intersectTriangle(vec3 ro, vec3 rd, vec3 v0, vec3 v1, vec3 v2, out float t, out vec3 normal)
 {
-    const float EPS = 1e-6;
+    const float EPS = 1e-5;
 
-    vec3 e1 = v1 - v0;
-    vec3 e2 = v2 - v0;
+    vec3 edge1 = v1 - v0;
+    vec3 edge2 = v2 - v0;
+    vec3 h = cross(rd, edge2);
+    float a = dot(edge1, h);
 
-    vec3 p = cross(rd, e2);
-    float det = dot(e1, p);
-    if (abs(det) < EPS) return false;
+    if (abs(a) < EPS) return false;
 
-    float invDet = 1.0 / det;
+    float f = 1.0 / a;
     vec3 s = ro - v0;
+    float u = f * dot(s, h);
 
-    float u = dot(s, p) * invDet;
     if (u < 0.0 || u > 1.0) return false;
 
-    vec3 q = cross(s, e1);
-    float v = dot(rd, q) * invDet;
+    vec3 q = cross(s, edge1);
+    float v = f * dot(rd, q);
     if (v < 0.0 || u + v > 1.0) return false;
 
-    t = dot(e2, q) * invDet;
-    if(t <= EPS) return false;
-
-    normal = normalize(cross(e1, e2));
-    return true;
+    t = f * dot(edge2, q);
+    if (t > EPS)
+    {
+        normal = normalize(cross(edge1, edge2));
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 void main()
