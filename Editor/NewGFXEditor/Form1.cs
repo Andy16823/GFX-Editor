@@ -193,8 +193,6 @@ namespace NewGFXEditor
         {
             // Create the cube primitive
             var cube = Primitive.CreatePrimitive("Cube", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Cube);
-
-            // Initialize the cube's mesh
             cube.Mesh.Init(_editorPanel3D.Renderer);
 
             // Set the cube's transform properties
@@ -216,8 +214,6 @@ namespace NewGFXEditor
         {
             // Create the sphere primitive
             var sphere = Primitive.CreatePrimitive("Sphere", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Sphere);
-
-            // Initialize the sphere's mesh
             sphere.Mesh.Init(_editorPanel3D.Renderer);
 
             // Set the sphere's transform properties
@@ -239,8 +235,6 @@ namespace NewGFXEditor
         {
             // Create the quad primitive
             var quad = Primitive.CreatePrimitive("Quad", material, AssetManager, LibGFX.Graphics.Primitives.PrimitiveType.Quad);
-
-            // Initialize the quad's mesh
             quad.Mesh.Init(_editorPanel3D.Renderer);
 
             // Set the quad's transform properties
@@ -335,11 +329,32 @@ namespace NewGFXEditor
             // Pick gizmo or scene element
             if (e.Button == MouseButtons.Left)
             {
-                var gizmoPicked = this.TransformGizmo.PickGizmo((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, e.X, e.Y);
-                if (gizmoPicked)
+                
+                if (this.TransformGizmo.Enabled)
                 {
-                    _mousePos = new Vector2(e.X, e.Y);
-                    TransformGizmo.PrepareForAction();
+                    var gizmoPicked = this.TransformGizmo.PickGizmo((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, e.X, e.Y);
+                    if(gizmoPicked)
+                    {
+                        _mousePos = new Vector2(e.X, e.Y);
+                        TransformGizmo.PrepareForAction();
+                    }
+                    else
+                    {
+                        var pickedElement = PickElement((PerspectiveCamera)SelectedCamera, Scene.GetAllElements(), e.X, e.Y, _editorPanel3D.Viewport);
+                        if (pickedElement != null)
+                        {
+                            _selectedElement = pickedElement;
+                            this.propertyGrid1.SelectedObject = _selectedElement;
+                            this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
+                            this.TransformGizmo.Enabled = true;
+                        }
+                        else
+                        {
+                            _selectedElement = null;
+                            this.propertyGrid1.SelectedObject = null;
+                            this.TransformGizmo.Enabled = false;
+                        }
+                    }
                 }
                 else
                 {
@@ -410,22 +425,12 @@ namespace NewGFXEditor
                     foreach (var mesh in meshes)
                     {
                         var hit = _computeRaycast.PerformRaycast(ray, element.Transform, mesh);
-                        if (hit.TriangleIndex >= 0 && hit.Normal.W < minDist)
+                        if (hit.hit == true && hit.hitDistance < minDist)
                         {
-                            minDist = hit.Normal.W;
-                            _debugSphereTransform.Position = hit.Position.Xyz;
+                            minDist = hit.hitDistance;
+                            _debugSphereTransform.Position = hit.hitLocation;
                             hitElement = element;
                         }
-
-                        // Perform ray-mesh intersection test
-                        //var hit = MeshRaycast.IntersectsMesh(ray, element.Transform, mesh);
-
-                        //// Update closest hit if necessary
-                        //if (hit.Hit && hit.Distance < minDist)
-                        //{
-                        //    minDist = hit.Distance;
-                        //    hitElement = element;
-                        //}
                     }
                 }
             }
@@ -698,19 +703,18 @@ namespace NewGFXEditor
         /// </summary>
         private void UpdateMaterialListView()
         {
-            //this.materialListView.Items.Clear();
-            //this.materialImageList.Images.Clear();
+            this.materialListView.Items.Clear();
+            this.materialImageList.Images.Clear();
 
-            //GFX.Instance.AssetManager.ForeachAsset<SGMaterial>(material =>
-            //{
-            //    var thumbnail = material.DiffuseTexture.ToBitmap();
-            //    this.materialImageList.Images.Add(material.Name, thumbnail);
+            AssetManager.ForeachAsset<SGMaterial>(material =>
+            {
+                var thumbnail = material.DiffuseTexture.ToBitmap();
+                this.materialImageList.Images.Add(material.Name, thumbnail);
 
-            //    var item = new ListViewItem(material.Name, material.Name);
-            //    item.Tag = material;
-            //    this.materialListView.Items.Add(item);
-            //});
-
+                var item = new ListViewItem(material.Name, material.Name);
+                item.Tag = material;
+                this.materialListView.Items.Add(item);
+            });
         }
 
         public void UpdateLightProfiler()

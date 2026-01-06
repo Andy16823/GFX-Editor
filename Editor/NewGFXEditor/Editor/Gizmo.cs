@@ -1,4 +1,5 @@
-﻿using LibGFX.Assets;
+﻿using Assimp;
+using LibGFX.Assets;
 using LibGFX.Core;
 using LibGFX.Core.GameElements;
 using LibGFX.Graphics;
@@ -221,18 +222,31 @@ namespace NewGFXEditor.Editor
             if (this.Enabled == false)
                 return;
 
-
             this.UnhoverMaterials();
+
+            float tmin = float.MaxValue;
+            IMaterial hoveredMaterial = null;
 
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
             foreach (var mesh in this.GizmoModel.Meshes)
             {
-                var hit = MeshRaycast.IntersectsMesh(ray, this.Transform, mesh);
-                if(hit.Hit)
+                AABB worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
+                float min, max;
+                var hit = MeshRaycast.IntersectsAABB(ray, worldAABB, out min, out max);
+                if(hit)
                 {
-                    var material = (GizmoMaterial)mesh.Material;
-                    material.Hovered = true;
+                    if(min < tmin)
+                    {
+                        tmin = min;
+                        hoveredMaterial = mesh.Material;
+                    }  
                 }
+            }
+
+            if(hoveredMaterial != null)
+            {
+                var material = (GizmoMaterial)hoveredMaterial;
+                material.Hovered = true;
             }
         }
 
@@ -267,31 +281,41 @@ namespace NewGFXEditor.Editor
         /// <returns></returns>
         public bool PickGizmo(PerspectiveCamera camera, Viewport viewport, int mouseX, int mouseY)
         {
+            float tmin = float.MaxValue;
+            GizmoActiveAxis gizmoActiveAxis = GizmoActiveAxis.None;
+            bool hitSomething = false;
+
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
             foreach (var mesh in this.GizmoModel.Meshes)
             {
-                var hit = MeshRaycast.IntersectsMesh(ray, this.Transform, mesh);
-                if(hit.Hit)
+                var worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
+
+                float min, max;
+                var hit = MeshRaycast.IntersectsAABB(ray, worldAABB, out min, out max);
+                if (hit)
                 {
-                    if (mesh.Name.StartsWith("Gizmo_X", StringComparison.OrdinalIgnoreCase))
+                    hitSomething = true;
+                    if (min < tmin)
                     {
-                        this.ActiveAxis = GizmoActiveAxis.X;
-                        return true;
-                    }
-                    else if (mesh.Name.StartsWith("Gizmo_Y", StringComparison.OrdinalIgnoreCase))
-                    {
-                        this.ActiveAxis = GizmoActiveAxis.Y;
-                        return true;
-                    }
-                    else if (mesh.Name.StartsWith("Gizmo_Z", StringComparison.OrdinalIgnoreCase))
-                    {
-                        this.ActiveAxis = GizmoActiveAxis.Z;
-                        return true;
+                        tmin = min;
+
+                        if (mesh.Name.StartsWith("Gizmo_X", StringComparison.OrdinalIgnoreCase))
+                        {
+                            gizmoActiveAxis = GizmoActiveAxis.X;
+                        }
+                        else if (mesh.Name.StartsWith("Gizmo_Y", StringComparison.OrdinalIgnoreCase))
+                        {
+                            gizmoActiveAxis = GizmoActiveAxis.Y;
+                        }
+                        else if (mesh.Name.StartsWith("Gizmo_Z", StringComparison.OrdinalIgnoreCase))
+                        {
+                            gizmoActiveAxis = GizmoActiveAxis.Z;
+                        }
                     }
                 }
             }
-            this.ActiveAxis = GizmoActiveAxis.None;
-            return false;
+            this.ActiveAxis = gizmoActiveAxis;
+            return hitSomething;
         }
 
         /// <summary>

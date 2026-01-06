@@ -55,28 +55,29 @@ namespace NewGFXEditor.Exporter
                     case "Materials":
                         while (reader.Read() && reader.TokenType != JsonToken.EndArray)
                         {
+                            JObject matObj = JObject.Load(reader);
                             var material = new SGMaterial();
-                            material.Deserialize(reader, ctx);
+                            material.Deserialize(matObj, ctx);
                             ctx.SetValue(material.ID.ToString(), material);
                             assets.Add(material);
                         }
                         break;
-
                     case "Meshes":
                         while (reader.Read() && reader.TokenType != JsonToken.EndArray)
                         {
+                            JObject meshObj = JObject.Load(reader);
                             var mesh = new Mesh();
-                            mesh.Deserialize(reader, ctx);
+                            mesh.Deserialize(meshObj, ctx);
                             ctx.SetValue(mesh.ID.ToString(), mesh);
                             assets.Add(mesh);
                         }
                         break;
-
                     case "StaticMeshModels":
                         while (reader.Read() && reader.TokenType != JsonToken.EndArray)
                         {
+                            JObject meshObj = JObject.Load(reader);
                             var staticMeshModel = new StaticMeshModel();
-                            staticMeshModel.Deserialize(reader, ctx);
+                            staticMeshModel.Deserialize(meshObj, ctx);
                             ctx.SetValue(staticMeshModel.ID.ToString(), staticMeshModel);
                             assets.Add(staticMeshModel);
                         }
@@ -125,7 +126,8 @@ namespace NewGFXEditor.Exporter
                         ReadAssets(jr, assets, ctx);
                         break;
                     case "Scene":
-                        scene.Deserialize(jr, ctx);
+                        JObject sceneObj = JObject.Load(jr);
+                        scene.Deserialize(sceneObj, ctx);
                         break;
                     default:
                         jr.Skip();

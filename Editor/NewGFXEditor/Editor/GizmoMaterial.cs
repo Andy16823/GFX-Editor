@@ -23,7 +23,7 @@ namespace NewGFXEditor.Editor
 
         public bool IsTransparent => false;
 
-        public void Deserialize(JsonReader reader, SerializationContext serializationContext, Func<JsonReader, string, bool> callback = null)
+        public void Deserialize(JObject obj, SerializationContext serializationContext, Func<JObject, bool> callback = null)
         {
             throw new NotImplementedException();
         }
@@ -36,6 +36,11 @@ namespace NewGFXEditor.Editor
         public void Dispose(IRenderDevice renderDevice)
         {
             this.IsInitialized = false;
+        }
+
+        public void FreeCPUResources()
+        {
+            
         }
 
         public void Init(IRenderDevice renderDevice)
