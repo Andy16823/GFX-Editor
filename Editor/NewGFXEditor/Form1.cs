@@ -115,6 +115,22 @@ namespace NewGFXEditor
             _editorPanel3D.Redraw();
         }
 
+        public void DeleteElement(GameElement element)
+        {
+            if(element != null)
+            {
+                element.Dispose(this.Scene, _editorPanel3D.Renderer);
+                this.Scene.RemoveElement(element);
+
+                if (element == _selectedElement)
+                {
+                    _elementViewModel.ReleaseElement();
+                    TransformGizmo.Enabled = false;
+                    _selectedElement = null;
+                }
+            }
+        }
+
         /// <summary>
         /// Displays a dialog that allows the user to save the current scene to a GFX level file.
         /// </summary>
@@ -538,11 +554,7 @@ namespace NewGFXEditor
             {
                 if (_selectedElement != null)
                 {
-                    this.TransformGizmo.Enabled = false;
-                    _selectedElement.Dispose(Scene, _editorPanel3D.Renderer);
-                    Scene.RemoveElement(_selectedElement);
-                    _selectedElement = null;
-                    _elementViewModel.ReleaseElement();
+                    this.DeleteElement(_selectedElement);
                     //this.propertyGrid1.SelectedObject = null;
                     this.UpdateGUI();
                     _editorPanel3D.Redraw();
@@ -1109,8 +1121,7 @@ namespace NewGFXEditor
         {
             if (_selectedElement != null)
             {
-                _selectedElement.Dispose(Scene, _editorPanel3D.Renderer);
-                Scene.RemoveElement(_selectedElement);
+                this.DeleteElement(_selectedElement);
             }
             this.UpdateGUI();
         }
