@@ -138,6 +138,13 @@ namespace NewGFXEditor.Editor
         /// delegate.</remarks>
         public event GizmoRotatedDelegate GizmoRotated;
 
+        /// <summary>
+        /// Occurs when the state of a Gizmo is updated.
+        /// </summary>
+        /// <remarks>Subscribe to this event to be notified whenever a Gizmo instance changes. The event
+        /// provides the updated Gizmo as an argument to the event handler.</remarks>
+        public event Action<Gizmo> GizmoUpdated;
+
         // Indicates whether to swap the X and Z axes for certain operations.
         private bool _swapXZAxes = false;
 
@@ -335,6 +342,7 @@ namespace NewGFXEditor.Editor
         public void ReleaseGizmo()
         {
             this.ActiveAxis = GizmoActiveAxis.None;
+            GizmoUpdated?.Invoke(this);
         }
 
         /// <summary>
@@ -468,7 +476,9 @@ namespace NewGFXEditor.Editor
             }
 
             if (snappedDelta != 0f)
+            {
                 GizmoScaled?.Invoke(snappedDelta);
+            }
         }
 
         public void RotateAlongAxis(PerspectiveCamera camera, Viewport viewport, int prevMouseX, int prevMouseY, int currMouseX, int currMouseY)
@@ -531,7 +541,10 @@ namespace NewGFXEditor.Editor
             }
 
             if (snappedDelta != 0f)
+            {
                 GizmoRotated?.Invoke(snappedDelta);
+            }
+                
         }
 
         /// <summary>

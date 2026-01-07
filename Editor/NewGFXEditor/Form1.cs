@@ -15,6 +15,7 @@ using LibGFX.Physics;
 using LibGFX.UI;
 using NewGFXEditor.Editor;
 using NewGFXEditor.Exporter;
+using NewGFXEditor.Viewmodel;
 using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -33,40 +34,15 @@ namespace NewGFXEditor
     /// </summary>
     public partial class Form1 : Form
     {
-        /// <summary>
-        /// The main camera used for rendering the scene.
-        /// </summary>
         public Camera SelectedCamera { get; set; }
         public PerspectiveCamera PerspectiveCamera { get; set; }
-        public OrthographicCamera OrthographicCamera { get; set; }
-
-        /// <summary>
-        /// Gets or sets the current scene associated with the application context.
-        /// </summary>
-        /// <remarks>Assigning a new scene replaces the existing scene and may trigger scene-specific
-        /// initialization or cleanup logic, depending on the implementation of the scene management system.</remarks>
         public Scene3D Scene { get; set; }
-
-        /// <summary>
-        /// The editor panel for 3D rendering and interaction.
-        /// </summary>
         public EditorPanel3D Editor { get => _editorPanel3D; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether grid lines are displayed.
-        /// </summary>
         public bool ShowGrid { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether light sources are selectable during picking operations.
-        /// </summary>
         public bool PickLights { get; set; } = false;
         public AssetManager AssetManager { get; set; }
-
-        /// <summary>
-        /// The transform gizmo for manipulating objects in the scene.
-        /// </summary>
         public Gizmo TransformGizmo { get; set; }
+
 
         private EditorPanel3D _editorPanel3D;
         private bool _dragCamera = false;
@@ -75,6 +51,7 @@ namespace NewGFXEditor
         private PhysicsHandler3D _phyisicHandler3D;
         private bool _sceneEnabled = true;
         private ComputeRaycast _computeRaycast;
+        private ElementViewModel _elementViewModel;
 
         // Debug sphere for raycast visualization
         private Transform _debugSphereTransform = new Transform();
@@ -101,6 +78,19 @@ namespace NewGFXEditor
             _editorPanel3D.OnMouseMove += EditorPanel3D_OnMouseMove;
             _editorPanel3D.OnMouseUp += EditorPanel3D_OnMouseUp;
             _editorPanel3D.OnResized += _editorPanel3D_OnResized;
+
+            _elementViewModel = new ElementViewModel();
+            _elementViewModel.Refreshed += (vm) =>
+            {
+                propertyGrid1.Refresh();
+            };
+            _elementViewModel.Released += (vm) =>
+            {
+                propertyGrid1.Refresh();
+            };
+            propertyGrid1.SelectedObject = _elementViewModel;
+            propertyGrid1.ExpandAllGridItems();
+
             LoadStartupAssets();
             this.UpdateGUI();
         }
@@ -329,11 +319,11 @@ namespace NewGFXEditor
             // Pick gizmo or scene element
             if (e.Button == MouseButtons.Left)
             {
-                
+
                 if (this.TransformGizmo.Enabled)
                 {
                     var gizmoPicked = this.TransformGizmo.PickGizmo((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, e.X, e.Y);
-                    if(gizmoPicked)
+                    if (gizmoPicked)
                     {
                         _mousePos = new Vector2(e.X, e.Y);
                         TransformGizmo.PrepareForAction();
@@ -344,14 +334,16 @@ namespace NewGFXEditor
                         if (pickedElement != null)
                         {
                             _selectedElement = pickedElement;
-                            this.propertyGrid1.SelectedObject = _selectedElement;
+                            _elementViewModel.SetElement(_selectedElement);
+                            //this.propertyGrid1.SelectedObject = _elementViewModel;
                             this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                             this.TransformGizmo.Enabled = true;
                         }
                         else
                         {
                             _selectedElement = null;
-                            this.propertyGrid1.SelectedObject = null;
+                            _elementViewModel.ReleaseElement();
+                            //this.propertyGrid1.SelectedObject = null;
                             this.TransformGizmo.Enabled = false;
                         }
                     }
@@ -362,14 +354,16 @@ namespace NewGFXEditor
                     if (pickedElement != null)
                     {
                         _selectedElement = pickedElement;
-                        this.propertyGrid1.SelectedObject = _selectedElement;
+                        _elementViewModel.SetElement(_selectedElement);
+                        //this.propertyGrid1.SelectedObject = _elementViewModel;
                         this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                         this.TransformGizmo.Enabled = true;
                     }
                     else
                     {
                         _selectedElement = null;
-                        this.propertyGrid1.SelectedObject = null;
+                        //this.propertyGrid1.SelectedObject = null;
+                        _elementViewModel.ReleaseElement();
                         this.TransformGizmo.Enabled = false;
                     }
                 }
@@ -548,7 +542,8 @@ namespace NewGFXEditor
                     _selectedElement.Dispose(Scene, _editorPanel3D.Renderer);
                     Scene.RemoveElement(_selectedElement);
                     _selectedElement = null;
-                    this.propertyGrid1.SelectedObject = null;
+                    _elementViewModel.ReleaseElement();
+                    //this.propertyGrid1.SelectedObject = null;
                     this.UpdateGUI();
                     _editorPanel3D.Redraw();
                 }
@@ -592,9 +587,16 @@ namespace NewGFXEditor
 
             // Load Gizmos
             TransformGizmo = new Gizmo("Assets/Gizmos/Transform/TransformGizmo.obj");
+            TransformGizmo.GizmoUpdated += TransformGizmo_GizmoUpdated;
             TransformGizmo.GizmoMoved += TransformGizmo_GizmoMoved;
             TransformGizmo.GizmoScaled += TransformGizmo_GizmoScaled;
             TransformGizmo.GizmoRotated += TransformGizmo_GizmoRotated;
+        }
+
+        private void TransformGizmo_GizmoUpdated(Gizmo obj)
+        {
+            _elementViewModel.Refresh();
+            //this.propertyGrid1.SelectedObject = _elementViewModel;
         }
 
         private void Scene3d_OnRenderPassEnd(BaseScene scene, Viewport viewport, IRenderDevice renderer, Camera camera)
@@ -676,8 +678,6 @@ namespace NewGFXEditor
         private void UpdateGUI()
         {
             this.UpdateSceneTree();
-            this.UpdateMaterialListView();
-            this.UpdateLightProfiler();
         }
 
         /// <summary>
@@ -696,48 +696,6 @@ namespace NewGFXEditor
             });
             this.treeView1.Nodes.Add(rootNode);
             this.treeView1.ExpandAll();
-        }
-
-        /// <summary>
-        /// Updates the material list view with the materials from the asset manager.
-        /// </summary>
-        private void UpdateMaterialListView()
-        {
-            this.materialListView.Items.Clear();
-            this.materialImageList.Images.Clear();
-
-            AssetManager.ForeachAsset<SGMaterial>(material =>
-            {
-                var thumbnail = material.DiffuseTexture.ToBitmap();
-                this.materialImageList.Images.Add(material.Name, thumbnail);
-
-                var item = new ListViewItem(material.Name, material.Name);
-                item.Tag = material;
-                this.materialListView.Items.Add(item);
-            });
-        }
-
-        public void UpdateLightProfiler()
-        {
-            this.lightProfilerListView.Columns.Clear();
-            this.lightProfilerListView.Columns.Add("ID", 100);
-            this.lightProfilerListView.Columns.Add("Type", 200);
-            this.lightProfilerListView.Columns.Add("Chunk", 150);
-            this.lightProfilerListView.Columns.Add("Position", 250);
-            this.lightProfilerListView.Columns.Add("Color", 250);
-            this.lightProfilerListView.Columns.Add("Intensity", 250);
-
-            this.lightProfilerListView.Items.Clear();
-            this.Scene.LightManager.ForEachLight(light =>
-            {
-                var lightItem = new ListViewItem(light.ID.ToString());
-                lightItem.SubItems.Add(light.GetType().FullName);
-                lightItem.SubItems.Add("-");
-                lightItem.SubItems.Add(light.Position.ToString());
-                lightItem.SubItems.Add(light.Color.ToString());
-                lightItem.SubItems.Add(light.Intensity.ToString());
-                this.lightProfilerListView.Items.Add(lightItem);
-            });
         }
 
         /// <summary>
@@ -800,10 +758,10 @@ namespace NewGFXEditor
                 var selectedElement = this.treeView1.SelectedNode.Tag;
                 if (selectedElement != null)
                 {
-                    this.propertyGrid1.SelectedObject = this.treeView1.SelectedNode.Tag;
                     if (selectedElement is GameElement entity)
                     {
                         _selectedElement = entity;
+                        _elementViewModel.SetElement(_selectedElement);
                         this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                         this.TransformGizmo.Enabled = true;
                         this._editorPanel3D.Redraw();
@@ -812,6 +770,7 @@ namespace NewGFXEditor
                     else
                     {
                         _selectedElement = null;
+                        _elementViewModel.ReleaseElement();
                         this.TransformGizmo.Enabled = false;
                         this._editorPanel3D.Redraw();
                     }
@@ -856,10 +815,6 @@ namespace NewGFXEditor
                     var materialEditor = new MaterialEditor(material);
                     materialEditor.Show();
                 }
-                else
-                {
-                    this.UpdateMaterialListView();
-                }
             }
         }
 
@@ -891,7 +846,6 @@ namespace NewGFXEditor
             {
                 blankMaterial.Init(_editorPanel3D.Renderer);
                 AssetManager.Add<SGMaterial>(blankMaterial.Name, blankMaterial);
-                this.UpdateMaterialListView();
             }
         }
 
@@ -903,52 +857,6 @@ namespace NewGFXEditor
         private void materialEditorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.CreateMaterial();
-        }
-
-        /// <summary>
-        /// Assigns the material selected in the material list view to the currently selected primitive element in the
-        /// 3D editor.
-        /// </summary>
-        /// <remarks>This method updates the material of the selected primitive and refreshes the 3D
-        /// editor view to reflect the change. The method has no effect if no primitive is selected or if no material is
-        /// selected in the list view.</remarks>
-        public void AssignSelectedMaterial()
-        {
-            if (_selectedElement != null)
-            {
-                if (_selectedElement.GetType() == typeof(Primitive))
-                {
-                    var primitive = (Primitive)_selectedElement;
-                    if (this.materialListView.SelectedItems.Count > 0)
-                    {
-                        var selectedItem = this.materialListView.SelectedItems[0];
-                        var material = (SGMaterial)selectedItem.Tag;
-                        primitive.Mesh.Material = material;
-                        _editorPanel3D.Redraw();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Handles the Click event of the Assign Selected Material menu item and initiates the assignment of the
-        /// currently selected material.
-        /// </summary>
-        /// <param name="sender">The source of the event, typically the Assign Selected Material menu item.</param>
-        /// <param name="e">An EventArgs object that contains the event data.</param>
-        private void assignSelectedMaterialToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AssignSelectedMaterial();
-        }
-
-        /// <summary>
-        /// Handles the DoubleClick event of the material list view to assign the currently selected material.
-        /// </summary>
-        /// <param name="sender">The source of the event, typically the material list view control.</param>
-        /// <param name="e">An EventArgs object that contains the event data.</param>
-        private void materialListView_DoubleClick(object sender, EventArgs e)
-        {
-            AssignSelectedMaterial();
         }
 
         /// <summary>
@@ -1423,6 +1331,15 @@ namespace NewGFXEditor
         {
             _showDebugSphere = !_showDebugSphere;
             showRaycastPointToolStripMenuItem.Checked = _showDebugSphere;
+            _editorPanel3D.Redraw();
+        }
+
+        private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (_selectedElement != null)
+            {
+                TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
+            }
             _editorPanel3D.Redraw();
         }
     }
