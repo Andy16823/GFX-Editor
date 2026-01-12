@@ -42,13 +42,13 @@ namespace NewGFXEditor
         public bool PickLights { get; set; } = false;
         public AssetManager AssetManager { get; set; }
         public Gizmo TransformGizmo { get; set; }
+        public string WorkingDirectory { get; set; }
 
 
         private EditorPanel3D _editorPanel3D;
         private bool _dragCamera = false;
         private Vector2 _mousePos;
         private GameElement _selectedElement = null;
-        private PhysicsHandler3D _phyisicHandler3D;
         private bool _sceneEnabled = true;
         private ComputeRaycast _computeRaycast;
         private ElementViewModel _elementViewModel;
@@ -66,8 +66,11 @@ namespace NewGFXEditor
         public Form1()
         {
             InitializeComponent();
+
+            // Create the asset manager and load default assets
             this.AssetManager = Utils.CreateDefaultAssetManager();
 
+            // Setup editor panel and callbacks
             _editorPanel3D = new EditorPanel3D(this.editorHostPanel);
             _editorPanel3D.EditorLoaded += EditorPanel3D_EditorLoaded;
             _editorPanel3D.OnKeyDown += EditorPanel3D_OnKeyDown;
@@ -79,6 +82,7 @@ namespace NewGFXEditor
             _editorPanel3D.OnMouseUp += EditorPanel3D_OnMouseUp;
             _editorPanel3D.OnResized += _editorPanel3D_OnResized;
 
+            // Setup property grid view model
             _elementViewModel = new ElementViewModel();
             _elementViewModel.Refreshed += (vm) =>
             {
@@ -91,8 +95,21 @@ namespace NewGFXEditor
             propertyGrid1.SelectedObject = _elementViewModel;
             propertyGrid1.ExpandAllGridItems();
 
-            LoadStartupAssets();
-            this.UpdateGUI();
+            // Setup cameras
+            this.PerspectiveCamera = new PerspectiveCamera(new Vector3(0, 5, -10), new Vector2(800, 600));
+            PerspectiveCamera.LookAt(new Vector3(0, 0, 0));
+            SelectedCamera = PerspectiveCamera;
+
+            // Setup debug sphere
+            _debugSphereTransform.Position = new Vector3(0, 0, 0);
+            _debugSphereTransform.Scale = new Vector3(0.2f);
+
+            // Load Gizmos
+            TransformGizmo = new Gizmo("Assets/Gizmos/Transform/TransformGizmo.obj");
+            TransformGizmo.GizmoUpdated += TransformGizmo_GizmoUpdated;
+            TransformGizmo.GizmoMoved += TransformGizmo_GizmoMoved;
+            TransformGizmo.GizmoScaled += TransformGizmo_GizmoScaled;
+            TransformGizmo.GizmoRotated += TransformGizmo_GizmoRotated;
         }
 
         /// <summary>
@@ -103,16 +120,46 @@ namespace NewGFXEditor
         /// scene state.</remarks>
         public void NewScene()
         {
-            TransformGizmo.Enabled = false;
-            _selectedElement = null;
-            this.Scene.FreeScene(_editorPanel3D.Renderer);
-            this.Scene.LightManager.Dispose(_editorPanel3D.Renderer);
+            // Prompt for working directory
+            var folderBrowserDialog = new FolderBrowserDialog();
+            MessageBox.Show("Select a working directory for the new scene.");
+            if (folderBrowserDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                this.WorkingDirectory = folderBrowserDialog.SelectedPath;
+            }
 
-            this.Scene.AddLight<DirectionalLight3D>(new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f));
-            this.Scene.LightManager.Init(_editorPanel3D.Renderer);
+            // Create or clear the scene
+            if (this.Scene == null)
+            {
+                // Create a new scene if none exists usually on startup
+                var scene3d = new Scene3D();
+                scene3d.DirectionalLight = new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f);
+                scene3d.OnRenderPassEnd += Scene3d_OnRenderPassEnd;
+                Scene = scene3d;
+            }
+            else
+            {
+                this.AssetManager.DisposeAssets(_editorPanel3D.Renderer);
+                this.AssetManager.ClearAssets();
+                // Clear existing scene
+                TransformGizmo.Enabled = false;
+                _selectedElement = null;
+                this.Scene.FreeScene(_editorPanel3D.Renderer);
+                this.Scene.LightManager.Dispose(_editorPanel3D.Renderer);
 
-            this.UpdateGUI();
-            _editorPanel3D.Redraw();
+                this.Scene.AddLight<DirectionalLight3D>(new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f));
+                this.Scene.LightManager.Init(_editorPanel3D.Renderer);
+
+                this.UpdateGUI();
+                _editorPanel3D.Redraw();
+            }
+
+            // Create default materials
+            var blankMaterial = new SGMaterial("e_BlankMaterial", Vector4.One);
+            AssetManager.Add<SGMaterial>(blankMaterial);
+            var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1));
+            AssetManager.Add<SGMaterial>(debugMaterial);
+            AssetManager.InitializeAssets(_editorPanel3D.Renderer);
         }
 
         public void DeleteElement(GameElement element)
@@ -474,7 +521,6 @@ namespace NewGFXEditor
             // Render the scene
             if (_sceneEnabled)
             {
-                _phyisicHandler3D.Process(Scene);
                 this.Scene.Render(_editorPanel3D.Viewport, _editorPanel3D.Renderer, SelectedCamera);
                 _editorPanel3D.Renderer.DrawRenderTarget(Scene.RenderTarget as MSAARenderTarget2D, 0);
             }
@@ -560,49 +606,6 @@ namespace NewGFXEditor
                     _editorPanel3D.Redraw();
                 }
             }
-        }
-
-        /// <summary>
-        /// Create the initial assets and setup the scene.
-        /// </summary>
-        private void LoadStartupAssets()
-        {
-            // Create the 3D Cameara
-            this.PerspectiveCamera = new PerspectiveCamera(new Vector3(0, 5, -10), new Vector2(800, 600));
-            PerspectiveCamera.LookAt(new Vector3(0, 0, 0));
-            SelectedCamera = PerspectiveCamera;
-
-            // Creates an 3D Scene
-            var scene3d = new Scene3D();
-            scene3d.DirectionalLight = new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f);
-            scene3d.OnRenderPassEnd += Scene3d_OnRenderPassEnd;
-            Scene = scene3d;
-
-            // Create the physics handler
-            _phyisicHandler3D = new PhysicsHandler3D(Vector3.Zero);
-            scene3d.PhysicsHandler = _phyisicHandler3D;
-
-            // Create an defaul material and add it to the asset manager
-            // Create an defaul material and add it to the asset manager
-            var blankMaterial = new SGMaterial("e_BlankMaterial", Vector4.One);
-            AssetManager.Add<SGMaterial>(blankMaterial);
-
-            var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1));
-            AssetManager.Add<SGMaterial>(debugMaterial);
-
-            _debugSphereTransform.Position = new Vector3(0, 0, 0);
-            _debugSphereTransform.Scale = new Vector3(0.2f);
-
-            // Create a cube and add it to the scene
-            //var cube = this.CreateCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1), Vector3.Zero, blankMaterial);
-            //Scene.AddGameElement("OBJECT_LAYER", cube);
-
-            // Load Gizmos
-            TransformGizmo = new Gizmo("Assets/Gizmos/Transform/TransformGizmo.obj");
-            TransformGizmo.GizmoUpdated += TransformGizmo_GizmoUpdated;
-            TransformGizmo.GizmoMoved += TransformGizmo_GizmoMoved;
-            TransformGizmo.GizmoScaled += TransformGizmo_GizmoScaled;
-            TransformGizmo.GizmoRotated += TransformGizmo_GizmoRotated;
         }
 
         private void TransformGizmo_GizmoUpdated(Gizmo obj)
@@ -717,6 +720,9 @@ namespace NewGFXEditor
         /// <param name="e"></param>
         private void EditorPanel3D_EditorLoaded(object sender, EventArgs e)
         {
+            // Create a new scene on startup
+            this.NewScene();
+
             //var computeShader = AssetManager.Load<ComputeShader>("Resources/Shader/Raycaster.glsl");
             //_computeRaycast = new ComputeRaycast(computeShader);
             _computeRaycast = new ComputeRaycast();
@@ -727,14 +733,11 @@ namespace NewGFXEditor
             // Initilize the scene
             this.Scene.Init(_editorPanel3D.Viewport, _editorPanel3D.Renderer);
 
-            // Create the physics debug drawer
-            _phyisicHandler3D.PhysicsWorld.DebugDrawer = new DebugDrawer(_editorPanel3D.Renderer);
-            _phyisicHandler3D.PhysicsWorld.DebugDrawer.DebugMode = BulletSharp.DebugDrawModes.DrawAabb;
-            _phyisicHandler3D.DebugPhysics = true;
-
             // Initialize the transform gizmo
             TransformGizmo.Init(_editorPanel3D.Renderer, _editorPanel3D.Viewport);
             _computeRaycast.Init(_editorPanel3D.Renderer);
+
+            this.UpdateGUI();
         }
 
         /// <summary>
