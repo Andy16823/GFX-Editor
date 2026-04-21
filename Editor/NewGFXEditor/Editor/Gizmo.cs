@@ -77,11 +77,6 @@ namespace NewGFXEditor.Editor
         public Transform Transform { get; set; }
 
         /// <summary>
-        /// Gets or sets the shader program used for rendering the gizmo.
-        /// </summary>
-        public RenderShader Shader { get; set; } = new GizmoShader();
-
-        /// <summary>
         /// Gets or sets the currently active axis for the gizmo operation.
         /// </summary>
         public GizmoActiveAxis ActiveAxis { get; set; } = GizmoActiveAxis.None;
@@ -152,6 +147,7 @@ namespace NewGFXEditor.Editor
         private Vector3 _unsnappedPosition;
         private float _rotationSnapRemainder = 0f;
         private float _scaleSnapRemainder = 0f;
+        private GizmoShader _shader;
 
         /// <summary>
         /// Constructor for the Gizmo class.
@@ -159,19 +155,23 @@ namespace NewGFXEditor.Editor
         /// <param name="file"></param>
         public Gizmo(String file)
         {
+            _shader = new GizmoShader();
+
             this.Transform = new Transform();
             GizmoModel = new StaticMeshModel(file);
-            // Change materials to GizmoMaterial
-            foreach (var mesh in this.GizmoModel.Meshes)
+            for(int i = this.GizmoModel.Meshes.Count - 1; i >= 0; i--)
             {
-                var sgMaterial = mesh.Material as SGMaterial;
+                var (mesh, material) = this.GizmoModel.Meshes[i];
+                var sgMaterial = material as SGMaterial;
                 GizmoMaterial gizmoMaterial = new GizmoMaterial()
                 {
                     Name = sgMaterial.Name,
-                    VertexColor = sgMaterial.Color
+                    VertexColor = sgMaterial.Color,
+                    Shader = _shader
                 };
-                mesh.Material = gizmoMaterial;
+                GizmoModel.Meshes[i] = (mesh, gizmoMaterial);
             }
+
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace NewGFXEditor.Editor
         /// <param name="viewport"></param>
         public void Init(IRenderDevice renderDevice, Viewport viewport)
         {
-            renderDevice.BuildRenderShader(this.Shader);
+            _shader.Init(renderDevice);
             this.GizmoModel.Init(renderDevice);
         }
         
@@ -201,10 +201,11 @@ namespace NewGFXEditor.Editor
                 return;
 
             renderDevice.SetProjectionMatrix(camera.GetProjectionMatrix(viewport));
-            renderDevice.BindShaderProgram(this.Shader);
-            foreach (var mesh in this.GizmoModel.Meshes)
+            foreach (var (mesh, material) in this.GizmoModel.Meshes)
             {
+                material.Use(renderDevice);
                 renderDevice.DrawMesh(this.Transform, mesh);
+                material.Disable(renderDevice);
             }
             renderDevice.UnbindShaderProgram();
         }
@@ -216,7 +217,7 @@ namespace NewGFXEditor.Editor
         public void Dispose(IRenderDevice renderDevice)
         {
             this.GizmoModel.Dispose(renderDevice);
-            renderDevice.DisposeRenderShader(this.Shader);
+            _shader.Dispose(renderDevice);
         }
 
         /// <summary>
@@ -235,7 +236,7 @@ namespace NewGFXEditor.Editor
             IMaterial hoveredMaterial = null;
 
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
-            foreach (var mesh in this.GizmoModel.Meshes)
+            foreach (var (mesh, material) in this.GizmoModel.Meshes)
             {
                 AABB worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
                 float min, max;
@@ -245,7 +246,7 @@ namespace NewGFXEditor.Editor
                     if(min < tmin)
                     {
                         tmin = min;
-                        hoveredMaterial = mesh.Material;
+                        hoveredMaterial = material;
                     }  
                 }
             }
@@ -293,7 +294,7 @@ namespace NewGFXEditor.Editor
             bool hitSomething = false;
 
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
-            foreach (var mesh in this.GizmoModel.Meshes)
+            foreach (var (mesh, material) in this.GizmoModel.Meshes)
             {
                 var worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
 
@@ -552,9 +553,9 @@ namespace NewGFXEditor.Editor
         /// </summary>
         private void UnhoverMaterials()
         {
-            foreach (var mesh in this.GizmoModel.Meshes)
+            foreach (var (mesh, material) in this.GizmoModel.Meshes)
             {
-                var mat = (GizmoMaterial)mesh.Material;
+                var mat = (GizmoMaterial)material;
                 mat.Hovered = false;
             }
         }
@@ -565,9 +566,9 @@ namespace NewGFXEditor.Editor
         /// <param name="id"></param>
         private void HoverMaterial(int id)
         {
-            var mesh = this.GizmoModel.Meshes[id];
-            var material = (GizmoMaterial)mesh.Material;
-            material.Hovered = true;
+            var (mesh, material) = this.GizmoModel.Meshes[id];
+            var gizmoMaterial = (GizmoMaterial)material;
+            gizmoMaterial.Hovered = true;
         }
 
         /// <summary>

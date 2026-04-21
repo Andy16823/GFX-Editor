@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GFX" Version="1.1.2.2" />
+    <PackageReference Include="GFX" Version="1.1.2.4" />
     <PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
   </ItemGroup>
 

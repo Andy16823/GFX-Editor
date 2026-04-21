@@ -101,10 +101,8 @@ namespace NewGFXEditor.Exporter
         /// <param name="scene"></param>
         /// <param name="assets"></param>
         /// <exception cref="JsonSerializationException"></exception>
-        private void ReadSceneFile(string filePath, LibGFX.Core.Scene3D scene, AssetManager assets)
+        private void ReadSceneFile(string filePath, LibGFX.Core.Scene3D scene, AssetManager assets, SerializationContext context)
         {
-            var ctx = new SerializationContext();
-
             using var fs = File.OpenRead(filePath);
             using var sr = new StreamReader(fs);
             using var jr = new JsonTextReader(sr);
@@ -123,11 +121,11 @@ namespace NewGFXEditor.Exporter
                 switch (prop)
                 {
                     case "Assets":
-                        ReadAssets(jr, assets, ctx);
+                        ReadAssets(jr, assets, context);
                         break;
                     case "Scene":
                         JObject sceneObj = JObject.Load(jr);
-                        scene.Deserialize(sceneObj, ctx);
+                        scene.Deserialize(sceneObj, context);
                         break;
                     default:
                         jr.Skip();
@@ -135,7 +133,7 @@ namespace NewGFXEditor.Exporter
                 }
             }
 
-            ctx.ContextData.Clear();
+            context.ContextData.Clear();
         }
 
         /// <summary>
@@ -144,7 +142,7 @@ namespace NewGFXEditor.Exporter
         /// <param name="filePath"></param>
         /// <param name="scene"></param>
         /// <param name="assets"></param>
-        public void ExportScene(string filePath, LibGFX.Core.Scene3D scene, AssetManager assets)
+        public void ExportScene(string filePath, LibGFX.Core.Scene3D scene, AssetManager assets, SerializationContext context)
         {
             using var fs = File.Create(filePath);
             using var sw = new StreamWriter(fs);
@@ -152,8 +150,6 @@ namespace NewGFXEditor.Exporter
             {
                 Formatting = Newtonsoft.Json.Formatting.Indented
             };
-
-            SerializationContext ctx = new SerializationContext();
 
             // Start root object
             jw.WriteStartObject();
@@ -167,7 +163,7 @@ namespace NewGFXEditor.Exporter
             jw.WriteStartArray();
             assets.ForeachAsset<IMaterial>(asset =>
             {
-                asset.Serialize(jw, ctx);
+                asset.Serialize(jw, context);
             });
             jw.WriteEndArray();
 
@@ -176,7 +172,7 @@ namespace NewGFXEditor.Exporter
             jw.WriteStartArray();
             assets.ForeachAsset<Mesh>(asset =>
             {
-                asset.Serialize(jw, ctx);
+                asset.Serialize(jw, context);
             });
             jw.WriteEndArray();
 
@@ -185,14 +181,14 @@ namespace NewGFXEditor.Exporter
             jw.WriteStartArray();
             assets.ForeachAsset<StaticMeshModel>(asset =>
             {
-                asset.Serialize(jw, ctx);
+                asset.Serialize(jw, context);
             });
             jw.WriteEndArray();
             jw.WriteEndObject();
 
             // Export Scene
             jw.WritePropertyName("Scene");
-            scene.Serialize(jw, ctx);
+            scene.Serialize(jw, context);
 
             jw.WriteEndObject();
 
@@ -207,9 +203,9 @@ namespace NewGFXEditor.Exporter
         /// <param name="filePath"></param>
         /// <param name="scene"></param>
         /// <param name="assets"></param>
-        public void ImportScene(string filePath, Scene3D scene, AssetManager assets)
+        public void ImportScene(string filePath, Scene3D scene, AssetManager assets, SerializationContext context)
         {
-            this.ReadSceneFile(filePath, scene, assets);
+            this.ReadSceneFile(filePath, scene, assets, context);
         }
     }
 }

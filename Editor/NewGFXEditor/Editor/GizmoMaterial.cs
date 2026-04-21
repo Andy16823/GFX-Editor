@@ -2,6 +2,7 @@
 using LibGFX.Core;
 using LibGFX.Graphics;
 using LibGFX.Graphics.Materials;
+using LibGFX.Graphics.Shader;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenTK.Mathematics;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LibGFX.Types;
 
 namespace NewGFXEditor.Editor
 {
@@ -23,14 +25,12 @@ namespace NewGFXEditor.Editor
 
         public bool IsTransparent => false;
 
+        public RenderShader Shader { get; set; }
+        public Dictionary<string, MetaValue> Metadata { get; set; }
+
         public void Deserialize(JObject obj, SerializationContext serializationContext, Func<JObject, bool> callback = null)
         {
             throw new NotImplementedException();
-        }
-
-        public void Disable(IRenderDevice renderDevice)
-        {
-            
         }
 
         public void Dispose(IRenderDevice renderDevice)
@@ -55,6 +55,7 @@ namespace NewGFXEditor.Editor
 
         public void Use(IRenderDevice renderDevice)
         {
+            renderDevice.BindShaderProgram(this.Shader);
             if(this.Hovered)
             {
                 renderDevice.PrepareShader("vertexColor", new Vector4(1, 1, 0, 1));
@@ -63,6 +64,11 @@ namespace NewGFXEditor.Editor
             {
                 renderDevice.PrepareShader("vertexColor", this.VertexColor);
             }
+        }
+
+        public void Disable(IRenderDevice renderDevice)
+        {
+            renderDevice.UnbindShaderProgram();
         }
 
         void IMaterial.LoadMaterial(Material asmat, string directory)
