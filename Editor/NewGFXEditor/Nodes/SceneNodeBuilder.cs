@@ -15,6 +15,14 @@ namespace NewGFXEditor.Nodes
         {
             var sceneNode = new TreeNode("Scene");
             sceneNode.Tag = scene;
+
+            if(scene.DirectionalLight != null ) 
+            {
+                var lightNode = new TreeNode("Directional Light");
+                lightNode.Tag = scene.DirectionalLight;
+                sceneNode.Nodes.Add(lightNode);
+            }
+
             scene.Elements.ForEach(element =>
             {
                 var elementNode = new TreeNode(element.Name);

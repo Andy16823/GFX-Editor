@@ -650,9 +650,15 @@ namespace NewGFXEditor
         private void TransformGizmo_GizmoUpdated(Gizmo obj)
         {
             _elementViewModel.Refresh();
-            //this.propertyGrid1.SelectedObject = _elementViewModel;
         }
 
+        /// <summary>
+        /// Scene render pass end event handler that draws a grid in the scene if the ShowGrid property is enabled.
+        /// </summary>
+        /// <param name="scene">The scene being rendered.</param>
+        /// <param name="viewport">The viewport through which the scene is viewed.</param>
+        /// <param name="renderer">The rendering device used to draw the scene.</param>
+        /// <param name="camera">The camera used to view the scene.</param>
         private void Scene3d_OnRenderPassEnd(BaseScene scene, Viewport viewport, IRenderDevice renderer, Camera camera)
         {
             if (this.ShowGrid)
@@ -661,6 +667,10 @@ namespace NewGFXEditor
             }
         }
 
+        /// <summary>
+        /// Transform Gizmo rotation event handler that applies rotation to the selected element based on the active axis and the provided rotation factor.
+        /// </summary>
+        /// <param name="rotationFactor"></param>
         private void TransformGizmo_GizmoRotated(float rotationFactor)
         {
             if (_selectedElement != null)
