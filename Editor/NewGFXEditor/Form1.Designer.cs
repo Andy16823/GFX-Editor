@@ -773,6 +773,7 @@
             propertyGrid1.Size = new Size(328, 351);
             propertyGrid1.TabIndex = 0;
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
+            propertyGrid1.SelectedObjectsChanged += propertyGrid1_SelectedObjectsChanged;
             // 
             // editorHostPanel
             // 

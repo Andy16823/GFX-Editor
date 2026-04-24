@@ -52,7 +52,6 @@ namespace NewGFXEditor
         private GameElement _selectedElement = null;
         private bool _sceneEnabled = true;
         private ComputeRaycast _computeRaycast;
-        private ElementViewModel _elementViewModel;
 
         // UI Stuff
         private TreeBuilder _treeBuilder;
@@ -85,19 +84,6 @@ namespace NewGFXEditor
             _editorPanel3D.OnMouseMove += EditorPanel3D_OnMouseMove;
             _editorPanel3D.OnMouseUp += EditorPanel3D_OnMouseUp;
             _editorPanel3D.OnResized += _editorPanel3D_OnResized;
-
-            // Setup property grid view model
-            _elementViewModel = new ElementViewModel();
-            _elementViewModel.Refreshed += (vm) =>
-            {
-                propertyGrid1.Refresh();
-            };
-            _elementViewModel.Released += (vm) =>
-            {
-                propertyGrid1.Refresh();
-            };
-            propertyGrid1.SelectedObject = _elementViewModel;
-            propertyGrid1.ExpandAllGridItems();
 
             // Setup cameras
             this.PerspectiveCamera = new PerspectiveCamera(new Vector3(0, 5, -10), new Vector2(800, 600));
@@ -175,14 +161,13 @@ namespace NewGFXEditor
 
         public void DeleteElement(GameElement element)
         {
-            if(element != null)
+            if (element != null)
             {
                 element.Dispose(this.Scene, _editorPanel3D.Renderer);
                 this.Scene.RemoveElement(element);
 
                 if (element == _selectedElement)
                 {
-                    _elementViewModel.ReleaseElement();
                     TransformGizmo.Enabled = false;
                     _selectedElement = null;
                 }
@@ -225,7 +210,7 @@ namespace NewGFXEditor
                 // Create serialization context with the shaders from the renderer
                 var context = new SerializationContext();
                 var shaders = _editorPanel3D.Renderer.GetAllRenderShaders();
-                foreach(var kvp in shaders)
+                foreach (var kvp in shaders)
                 {
                     context.SetValue(kvp.Key, kvp.Value);
                 }
@@ -435,7 +420,11 @@ namespace NewGFXEditor
                         if (pickedElement != null)
                         {
                             _selectedElement = pickedElement;
-                            _elementViewModel.SetElement(_selectedElement);
+
+                            // Update the element view model and property grid
+                            var elementViewModel = new ElementViewModel(pickedElement);
+                            this.propertyGrid1.SelectedObject = elementViewModel;
+
                             //this.propertyGrid1.SelectedObject = _elementViewModel;
                             this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                             this.TransformGizmo.Enabled = true;
@@ -443,8 +432,7 @@ namespace NewGFXEditor
                         else
                         {
                             _selectedElement = null;
-                            _elementViewModel.ReleaseElement();
-                            //this.propertyGrid1.SelectedObject = null;
+                            this.propertyGrid1.SelectedObject = null;
                             this.TransformGizmo.Enabled = false;
                         }
                     }
@@ -455,16 +443,17 @@ namespace NewGFXEditor
                     if (pickedElement != null)
                     {
                         _selectedElement = pickedElement;
-                        _elementViewModel.SetElement(_selectedElement);
-                        //this.propertyGrid1.SelectedObject = _elementViewModel;
+
+                        var elementViewModel = new ElementViewModel(pickedElement);
+                        this.propertyGrid1.SelectedObject = elementViewModel;
+
                         this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                         this.TransformGizmo.Enabled = true;
                     }
                     else
                     {
                         _selectedElement = null;
-                        //this.propertyGrid1.SelectedObject = null;
-                        _elementViewModel.ReleaseElement();
+                        this.propertyGrid1.SelectedObject = null;
                         this.TransformGizmo.Enabled = false;
                     }
                 }
@@ -649,7 +638,11 @@ namespace NewGFXEditor
 
         private void TransformGizmo_GizmoUpdated(Gizmo obj)
         {
-            _elementViewModel.Refresh();
+            if (this.propertyGrid1.SelectedObject is ElementViewModel elementViewModel)
+            {
+                elementViewModel.Refresh();
+                this.propertyGrid1.Refresh();
+            }
         }
 
         /// <summary>
@@ -809,7 +802,10 @@ namespace NewGFXEditor
                     if (selectedElement is GameElement entity)
                     {
                         _selectedElement = entity;
-                        _elementViewModel.SetElement(_selectedElement);
+
+                        var elementViewModel = new ElementViewModel(entity);
+                        this.propertyGrid1.SelectedObject = elementViewModel;
+
                         this.TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
                         this.TransformGizmo.Enabled = true;
                         this._editorPanel3D.Redraw();
@@ -818,7 +814,7 @@ namespace NewGFXEditor
                     else
                     {
                         _selectedElement = null;
-                        _elementViewModel.ReleaseElement();
+                        this.propertyGrid1.SelectedObject = null;
                         this.TransformGizmo.Enabled = false;
                         this._editorPanel3D.Redraw();
                     }
@@ -1389,6 +1385,11 @@ namespace NewGFXEditor
                 TransformGizmo.Transform.Position = _selectedElement.Transform.Position;
             }
             _editorPanel3D.Redraw();
+        }
+
+        private void propertyGrid1_SelectedObjectsChanged(object sender, EventArgs e)
+        {
+            this.propertyGrid1.ExpandAllGridItems();
         }
     }
 }

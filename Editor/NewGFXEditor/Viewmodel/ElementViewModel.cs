@@ -54,8 +54,9 @@ namespace NewGFXEditor.Viewmodel
         public event Action<ElementViewModel> Refreshed;
         public event Action<ElementViewModel> Released;
 
-        public ElementViewModel()
+        public ElementViewModel(GameElement element)
         {
+            _element = element;
             _position = new Vec3ViewModel(Vector3.Zero, v =>
             {
                 if (_element != null)
