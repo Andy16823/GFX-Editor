@@ -84,6 +84,11 @@
             modelToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator15 = new ToolStripSeparator();
             pointLightToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            meshToolStripMenuItem = new ToolStripMenuItem();
+            cubeMeshToolStripMenuItem = new ToolStripMenuItem();
+            quadMeshToolStripMenuItem = new ToolStripMenuItem();
+            sphereMeshToolStripMenuItem = new ToolStripMenuItem();
             extrasToolStripMenuItem = new ToolStripMenuItem();
             materialEditorToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator8 = new ToolStripSeparator();
@@ -275,6 +280,7 @@
             kopierenToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.C;
             kopierenToolStripMenuItem.Size = new Size(191, 22);
             kopierenToolStripMenuItem.Text = "&Kopieren";
+            kopierenToolStripMenuItem.Click += kopierenToolStripMenuItem_Click;
             // 
             // einfügenToolStripMenuItem
             // 
@@ -452,7 +458,7 @@
             // 
             // createToolStripMenuItem
             // 
-            createToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { cubeToolStripMenuItem, sphereToolStripMenuItem, quadToolStripMenuItem, toolStripSeparator10, modelToolStripMenuItem, toolStripSeparator15, pointLightToolStripMenuItem });
+            createToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { cubeToolStripMenuItem, sphereToolStripMenuItem, quadToolStripMenuItem, toolStripSeparator10, modelToolStripMenuItem, toolStripSeparator15, pointLightToolStripMenuItem, toolStripSeparator2, meshToolStripMenuItem });
             createToolStripMenuItem.Name = "createToolStripMenuItem";
             createToolStripMenuItem.Size = new Size(53, 20);
             createToolStripMenuItem.Text = "Create";
@@ -461,47 +467,80 @@
             // cubeToolStripMenuItem
             // 
             cubeToolStripMenuItem.Name = "cubeToolStripMenuItem";
-            cubeToolStripMenuItem.Size = new Size(132, 22);
+            cubeToolStripMenuItem.Size = new Size(180, 22);
             cubeToolStripMenuItem.Text = "Cube";
             cubeToolStripMenuItem.Click += cubeToolStripMenuItem_Click;
             // 
             // sphereToolStripMenuItem
             // 
             sphereToolStripMenuItem.Name = "sphereToolStripMenuItem";
-            sphereToolStripMenuItem.Size = new Size(132, 22);
+            sphereToolStripMenuItem.Size = new Size(180, 22);
             sphereToolStripMenuItem.Text = "Sphere";
             sphereToolStripMenuItem.Click += sphereToolStripMenuItem_Click;
             // 
             // quadToolStripMenuItem
             // 
             quadToolStripMenuItem.Name = "quadToolStripMenuItem";
-            quadToolStripMenuItem.Size = new Size(132, 22);
+            quadToolStripMenuItem.Size = new Size(180, 22);
             quadToolStripMenuItem.Text = "Quad";
             quadToolStripMenuItem.Click += quadToolStripMenuItem_Click;
             // 
             // toolStripSeparator10
             // 
             toolStripSeparator10.Name = "toolStripSeparator10";
-            toolStripSeparator10.Size = new Size(129, 6);
+            toolStripSeparator10.Size = new Size(177, 6);
             // 
             // modelToolStripMenuItem
             // 
             modelToolStripMenuItem.Name = "modelToolStripMenuItem";
-            modelToolStripMenuItem.Size = new Size(132, 22);
+            modelToolStripMenuItem.Size = new Size(180, 22);
             modelToolStripMenuItem.Text = "Model";
             modelToolStripMenuItem.Click += modelToolStripMenuItem_Click;
             // 
             // toolStripSeparator15
             // 
             toolStripSeparator15.Name = "toolStripSeparator15";
-            toolStripSeparator15.Size = new Size(129, 6);
+            toolStripSeparator15.Size = new Size(177, 6);
             // 
             // pointLightToolStripMenuItem
             // 
             pointLightToolStripMenuItem.Name = "pointLightToolStripMenuItem";
-            pointLightToolStripMenuItem.Size = new Size(132, 22);
+            pointLightToolStripMenuItem.Size = new Size(180, 22);
             pointLightToolStripMenuItem.Text = "Point Light";
             pointLightToolStripMenuItem.Click += pointLightToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(177, 6);
+            // 
+            // meshToolStripMenuItem
+            // 
+            meshToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { cubeMeshToolStripMenuItem, quadMeshToolStripMenuItem, sphereMeshToolStripMenuItem });
+            meshToolStripMenuItem.Name = "meshToolStripMenuItem";
+            meshToolStripMenuItem.Size = new Size(180, 22);
+            meshToolStripMenuItem.Text = "Mesh";
+            // 
+            // cubeMeshToolStripMenuItem
+            // 
+            cubeMeshToolStripMenuItem.Name = "cubeMeshToolStripMenuItem";
+            cubeMeshToolStripMenuItem.Size = new Size(142, 22);
+            cubeMeshToolStripMenuItem.Text = "Cube Mesh";
+            cubeMeshToolStripMenuItem.Click += cubeMeshToolStripMenuItem_Click;
+            // 
+            // quadMeshToolStripMenuItem
+            // 
+            quadMeshToolStripMenuItem.Name = "quadMeshToolStripMenuItem";
+            quadMeshToolStripMenuItem.Size = new Size(142, 22);
+            quadMeshToolStripMenuItem.Text = "Quad Mesh";
+            quadMeshToolStripMenuItem.Click += quadMeshToolStripMenuItem_Click;
+            // 
+            // sphereMeshToolStripMenuItem
+            // 
+            sphereMeshToolStripMenuItem.Name = "sphereMeshToolStripMenuItem";
+            sphereMeshToolStripMenuItem.Size = new Size(142, 22);
+            sphereMeshToolStripMenuItem.Text = "Sphere Mesh";
+            sphereMeshToolStripMenuItem.Click += sphereMeshToolStripMenuItem_Click;
             // 
             // extrasToolStripMenuItem
             // 
@@ -801,6 +840,7 @@
             MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "GFX 3D World Editor";
+            WindowState = FormWindowState.Maximized;
             FormClosing += Form1_FormClosing;
             Load += Form1_Load;
             KeyDown += Form1_KeyDown;
@@ -911,5 +951,10 @@
         private ToolStripSeparator toolStripSeparator18;
         private ToolStripMenuItem reloadUToolStripMenuItem;
         private ToolStripMenuItem showRaycastPointToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem meshToolStripMenuItem;
+        private ToolStripMenuItem cubeMeshToolStripMenuItem;
+        private ToolStripMenuItem quadMeshToolStripMenuItem;
+        private ToolStripMenuItem sphereMeshToolStripMenuItem;
     }
 }

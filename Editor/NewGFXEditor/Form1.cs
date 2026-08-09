@@ -545,6 +545,11 @@ namespace NewGFXEditor
         /// <param name="e">An object that contains the event data.</param>
         private void EditorPanel3D_OnRender(object sender, EventArgs e)
         {
+            if (this.Scene == null)
+            {
+                return;
+            }
+
             // Render the scene
             if (_sceneEnabled)
             {
@@ -969,6 +974,7 @@ namespace NewGFXEditor
             primitive.Init(Scene, _editorPanel3D.Viewport, _editorPanel3D.Renderer);
             Scene.AddGameElement(primitive);
             this.UpdateGUI();
+            this.Editor.Redraw();
         }
 
         /// <summary>
@@ -1327,6 +1333,11 @@ namespace NewGFXEditor
             lightPickingToolStripMenuItem.Checked = this.PickLights;
         }
 
+        /// <summary>
+        /// Enables or disables snapping for the transform gizmo when the corresponding toolbar button is clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             this.TransformGizmo.EnableSnapping = !this.TransformGizmo.EnableSnapping;
@@ -1338,6 +1349,15 @@ namespace NewGFXEditor
 
         }
 
+        /// <summary>
+        /// Handles the Click event for the light settings menu item, allowing the user to edit the settings of a
+        /// selected point light element.
+        /// </summary>
+        /// <remarks>If no element is selected or the selected element is not a point light, an error
+        /// message is displayed to the user. When a point light is selected, a dialog is shown to edit its settings. If
+        /// the dialog is confirmed, the 3D editor panel is redrawn to reflect any changes.</remarks>
+        /// <param name="sender">The source of the event, typically the menu item that was clicked.</param>
+        /// <param name="e">An EventArgs object that contains the event data.</param>
         private void lightSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_selectedElement != null)
@@ -1390,6 +1410,64 @@ namespace NewGFXEditor
         private void propertyGrid1_SelectedObjectsChanged(object sender, EventArgs e)
         {
             this.propertyGrid1.ExpandAllGridItems();
+        }
+
+        private void cubeMeshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dialog = new CreateDialog("Create Cube Mesh", "CubeMesh");
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                var name = dialog.Value;
+                var mesh = Cube.GetMesh();
+                mesh.Init(_editorPanel3D.Renderer);
+                AssetManager.Add<Mesh>(name, mesh);
+                MessageBox.Show($"Cube Mesh '{name}' created and added to assets.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.UpdateGUI();
+            }
+        }
+
+        private void quadMeshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dialog = new CreateDialog("Create Quad Mesh", "QuadMesh");
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                var name = dialog.Value;
+                var mesh = Quad.GetMesh();
+                mesh.Init(_editorPanel3D.Renderer);
+                AssetManager.Add<Mesh>(name, mesh);
+                MessageBox.Show($"Quad Mesh '{name}' created and added to assets.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.UpdateGUI();
+            }
+        }
+
+        private void sphereMeshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dialog = new CreateDialog("Create Sphere Mesh", "SphereMesh");
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                var name = dialog.Value;
+                var mesh = LibGFX.Graphics.Generator.SphereGenerator.CreateSphere();
+                mesh.Init(_editorPanel3D.Renderer);
+                AssetManager.Add<Mesh>(name, mesh);
+                MessageBox.Show($"Sphere Mesh '{name}' created and added to assets.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.UpdateGUI();
+            }
+        }
+
+        private void kopierenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this._selectedElement != null)
+            {
+                var clone = _selectedElement.Clone();
+                if (clone != null)
+                {
+                    clone.Name = $"{_selectedElement.Name}_Copy";
+                    clone.Init(Scene, _editorPanel3D.Viewport, _editorPanel3D.Renderer);
+                    Scene.AddGameElement(clone);
+                    this.UpdateGUI();
+                    this.Editor.Redraw();
+                }
+            }
         }
     }
 }
