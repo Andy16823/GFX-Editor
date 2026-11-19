@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GFX" Version="1.1.2.4" />
+    <PackageReference Include="GFX" Version="1.1.4.1" />
     <PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
   </ItemGroup>
 
@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <None Update="Assets\Gizmos\Transform\TransformGizmo.mtl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Gizmos\Transform\TransformGizmo.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

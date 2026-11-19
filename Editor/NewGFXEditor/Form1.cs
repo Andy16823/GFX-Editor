@@ -45,18 +45,13 @@ namespace NewGFXEditor
         public Gizmo TransformGizmo { get; set; }
         public string WorkingDirectory { get; set; }
 
-
         private EditorPanel3D _editorPanel3D;
         private bool _dragCamera = false;
         private Vector2 _mousePos;
         private GameElement _selectedElement = null;
         private bool _sceneEnabled = true;
         private ComputeRaycast _computeRaycast;
-
-        // UI Stuff
         private TreeBuilder _treeBuilder;
-
-        // Debug sphere for raycast visualization
         private Transform _debugSphereTransform = new Transform();
         private bool _showDebugSphere = false;
 
@@ -107,6 +102,7 @@ namespace NewGFXEditor
             _treeBuilder.AddBuilder(new MaterialNodeBuilder());
             _treeBuilder.AddBuilder(new MeshNodeBuilder());
             _treeBuilder.AddBuilder(new ModelNodeBuilder());
+            _treeBuilder.AddBuilder(new LightNodeBuilder());
         }
 
         /// <summary>
@@ -117,7 +113,6 @@ namespace NewGFXEditor
         /// scene state.</remarks>
         public void NewScene()
         {
-            // Prompt for working directory
             var folderBrowserDialog = new FolderBrowserDialog();
             MessageBox.Show("Select a working directory for the new scene.");
             if (folderBrowserDialog.ShowDialog(this) == DialogResult.OK)
@@ -136,25 +131,21 @@ namespace NewGFXEditor
             }
             else
             {
+                _selectedElement = null;
+                TransformGizmo.Enabled = false;
                 this.AssetManager.DisposeAssets(_editorPanel3D.Renderer);
                 this.AssetManager.ClearAssets();
-                // Clear existing scene
-                TransformGizmo.Enabled = false;
-                _selectedElement = null;
                 this.Scene.FreeScene(_editorPanel3D.Renderer);
-                this.Scene.LightManager.Dispose(_editorPanel3D.Renderer);
-
-                this.Scene.AddLight<DirectionalLight3D>(new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f));
-                this.Scene.LightManager.Init(_editorPanel3D.Renderer);
-
+                this.Scene.DirectionalLight = new DirectionalLight3D(new Vector3(-0.2f, 1.0f, -0.3f), new Vector4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f);
+                this.Scene.InitLights(_editorPanel3D.Renderer);
                 this.UpdateGUI();
                 _editorPanel3D.Redraw();
             }
 
             // Create default materials
-            var blankMaterial = new SGMaterial("e_BlankMaterial", Vector4.One, _editorPanel3D.Renderer.GetRenderShader<MeshShader>());
+            var blankMaterial = new SGMaterial("e_BlankMaterial", Vector4.One);
             AssetManager.Add<SGMaterial>(blankMaterial);
-            var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1), _editorPanel3D.Renderer.GetRenderShader<MeshShader>());
+            var debugMaterial = new SGMaterial("e_DebugMaterial", new Vector4(1, 0, 0, 1));
             AssetManager.Add<SGMaterial>(debugMaterial);
             AssetManager.InitializeAssets(_editorPanel3D.Renderer);
         }
@@ -191,23 +182,24 @@ namespace NewGFXEditor
             }
         }
 
+        /// <summary>
+        /// Loads a scene from a GFX level file selected by the user through an open file dialog. 
+        /// The current scene is cleared and replaced with the loaded scene.
+        /// </summary>
         public void OpenScene()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "GFX Scene File |*.gfxlevel";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                // Disable and clear assets and scene
+                // Clear the current scene and assets before loading the new scene
                 _sceneEnabled = false;
                 AssetManager.DisposeAssets(_editorPanel3D.Renderer);
                 AssetManager.ClearAssets();
-                Scene.LightManager.Dispose(_editorPanel3D.Renderer);
                 Scene.FreeScene(_editorPanel3D.Renderer);
 
-                // Create the exporter and import the scene
+                // Load the new scene from the selected file
                 var exporter = new GFXExporter();
-
-                // Create serialization context with the shaders from the renderer
                 var context = new SerializationContext();
                 var shaders = _editorPanel3D.Renderer.GetAllRenderShaders();
                 foreach (var kvp in shaders)
@@ -216,13 +208,13 @@ namespace NewGFXEditor
                 }
                 exporter.ImportScene(openFileDialog.FileName, this.Scene as Scene3D, AssetManager, context);
 
-                // Re-initialize assets and scene
+                // Re-initialize Scene and Assets after loading
                 AssetManager.InitializeAssets(_editorPanel3D.Renderer);
-                Scene.LightManager.Init(_editorPanel3D.Renderer);
                 Scene.InitializeElements(_editorPanel3D.Viewport, _editorPanel3D.Renderer);
+                Scene.InitLights(_editorPanel3D.Renderer);
                 _sceneEnabled = true;
-                this.UpdateGUI();
                 _editorPanel3D.Redraw();
+                this.UpdateGUI();
             }
         }
 
@@ -555,7 +547,7 @@ namespace NewGFXEditor
             {
                 this.Scene.BuildShadowMaps(_editorPanel3D.Viewport, _editorPanel3D.Renderer, this.PerspectiveCamera);
                 this.Scene.Render(_editorPanel3D.Viewport, _editorPanel3D.Renderer, SelectedCamera);
-                _editorPanel3D.Renderer.DrawRenderTarget(Scene.RenderTarget as MSAARenderTarget2D, 0);
+                _editorPanel3D.Renderer.DrawRenderTarget(Scene.RenderTarget as LibGFX.Graphics.RenderTarget.MSAARenderTarget2D, 0);
             }
 
             // Render the transform gizmo
@@ -889,7 +881,7 @@ namespace NewGFXEditor
         public void CreateMaterial()
         {
             var materialCount = AssetManager.GetAssetCount<SGMaterial>();
-            var blankMaterial = new SGMaterial($"e_NewMaterial_{materialCount + 1}", Vector4.One, _editorPanel3D.Renderer.GetRenderShader<MeshShader>());
+            var blankMaterial = new SGMaterial($"e_NewMaterial_{materialCount + 1}", Vector4.One);
 
             var materialEditor = new MaterialEditor(blankMaterial);
             if (materialEditor.ShowDialog() == DialogResult.OK)
@@ -1456,18 +1448,24 @@ namespace NewGFXEditor
 
         private void kopierenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (this._selectedElement != null)
-            {
-                var clone = _selectedElement.Clone();
-                if (clone != null)
-                {
-                    clone.Name = $"{_selectedElement.Name}_Copy";
-                    clone.Init(Scene, _editorPanel3D.Viewport, _editorPanel3D.Renderer);
-                    Scene.AddGameElement(clone);
-                    this.UpdateGUI();
-                    this.Editor.Redraw();
-                }
-            }
+            // TODO: Implement copy functionality for the selected element
+            //if (this._selectedElement != null)
+            //{
+            //    var clone = _selectedElement.clone();
+            //    if (clone != null)
+            //    {
+            //        clone.Name = $"{_selectedElement.Name}_Copy";
+            //        clone.Init(Scene, _editorPanel3D.Viewport, _editorPanel3D.Renderer);
+            //        Scene.AddGameElement(clone);
+            //        this.UpdateGUI();
+            //        this.Editor.Redraw();
+            //    }
+            //}
+        }
+
+        private void öffnenToolStripButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

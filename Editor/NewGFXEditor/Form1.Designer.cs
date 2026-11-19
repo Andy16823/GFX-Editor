@@ -467,58 +467,58 @@
             // cubeToolStripMenuItem
             // 
             cubeToolStripMenuItem.Name = "cubeToolStripMenuItem";
-            cubeToolStripMenuItem.Size = new Size(180, 22);
+            cubeToolStripMenuItem.Size = new Size(132, 22);
             cubeToolStripMenuItem.Text = "Cube";
             cubeToolStripMenuItem.Click += cubeToolStripMenuItem_Click;
             // 
             // sphereToolStripMenuItem
             // 
             sphereToolStripMenuItem.Name = "sphereToolStripMenuItem";
-            sphereToolStripMenuItem.Size = new Size(180, 22);
+            sphereToolStripMenuItem.Size = new Size(132, 22);
             sphereToolStripMenuItem.Text = "Sphere";
             sphereToolStripMenuItem.Click += sphereToolStripMenuItem_Click;
             // 
             // quadToolStripMenuItem
             // 
             quadToolStripMenuItem.Name = "quadToolStripMenuItem";
-            quadToolStripMenuItem.Size = new Size(180, 22);
+            quadToolStripMenuItem.Size = new Size(132, 22);
             quadToolStripMenuItem.Text = "Quad";
             quadToolStripMenuItem.Click += quadToolStripMenuItem_Click;
             // 
             // toolStripSeparator10
             // 
             toolStripSeparator10.Name = "toolStripSeparator10";
-            toolStripSeparator10.Size = new Size(177, 6);
+            toolStripSeparator10.Size = new Size(129, 6);
             // 
             // modelToolStripMenuItem
             // 
             modelToolStripMenuItem.Name = "modelToolStripMenuItem";
-            modelToolStripMenuItem.Size = new Size(180, 22);
+            modelToolStripMenuItem.Size = new Size(132, 22);
             modelToolStripMenuItem.Text = "Model";
             modelToolStripMenuItem.Click += modelToolStripMenuItem_Click;
             // 
             // toolStripSeparator15
             // 
             toolStripSeparator15.Name = "toolStripSeparator15";
-            toolStripSeparator15.Size = new Size(177, 6);
+            toolStripSeparator15.Size = new Size(129, 6);
             // 
             // pointLightToolStripMenuItem
             // 
             pointLightToolStripMenuItem.Name = "pointLightToolStripMenuItem";
-            pointLightToolStripMenuItem.Size = new Size(180, 22);
+            pointLightToolStripMenuItem.Size = new Size(132, 22);
             pointLightToolStripMenuItem.Text = "Point Light";
             pointLightToolStripMenuItem.Click += pointLightToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(129, 6);
             // 
             // meshToolStripMenuItem
             // 
             meshToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { cubeMeshToolStripMenuItem, quadMeshToolStripMenuItem, sphereMeshToolStripMenuItem });
             meshToolStripMenuItem.Name = "meshToolStripMenuItem";
-            meshToolStripMenuItem.Size = new Size(180, 22);
+            meshToolStripMenuItem.Size = new Size(132, 22);
             meshToolStripMenuItem.Text = "Mesh";
             // 
             // cubeMeshToolStripMenuItem
@@ -637,6 +637,7 @@
             öffnenToolStripButton.Name = "öffnenToolStripButton";
             öffnenToolStripButton.Size = new Size(23, 22);
             öffnenToolStripButton.Text = "Ö&ffnen";
+            öffnenToolStripButton.Click += öffnenToolStripButton_Click;
             // 
             // speichernToolStripButton
             // 
@@ -806,6 +807,7 @@
             // 
             // propertyGrid1
             // 
+            propertyGrid1.BackColor = SystemColors.Control;
             propertyGrid1.Dock = DockStyle.Fill;
             propertyGrid1.Location = new Point(0, 0);
             propertyGrid1.Name = "propertyGrid1";

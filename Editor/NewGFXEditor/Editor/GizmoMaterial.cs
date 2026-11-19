@@ -24,8 +24,6 @@ namespace NewGFXEditor.Editor
         public bool IsInitialized { get; private set; } = false;
 
         public bool IsTransparent => false;
-
-        public RenderShader Shader { get; set; }
         public Dictionary<string, MetaValue> Metadata { get; set; }
 
         public void Deserialize(JObject obj, SerializationContext serializationContext, Func<JObject, bool> callback = null)
@@ -55,7 +53,6 @@ namespace NewGFXEditor.Editor
 
         public void Use(IRenderDevice renderDevice)
         {
-            renderDevice.BindShaderProgram(this.Shader);
             if(this.Hovered)
             {
                 renderDevice.PrepareShader("vertexColor", new Vector4(1, 1, 0, 1));
@@ -68,12 +65,17 @@ namespace NewGFXEditor.Editor
 
         public void Disable(IRenderDevice renderDevice)
         {
-            renderDevice.UnbindShaderProgram();
+
         }
 
         void IMaterial.LoadMaterial(Material asmat, string directory)
         {
             
+        }
+
+        public MaterialScope Begin(IRenderDevice renderDevice)
+        {
+            return new MaterialScope(this, renderDevice);
         }
     }
 }

@@ -161,15 +161,15 @@ namespace NewGFXEditor.Editor
             GizmoModel = new StaticMeshModel(file);
             for(int i = this.GizmoModel.Meshes.Count - 1; i >= 0; i--)
             {
-                var (mesh, material) = this.GizmoModel.Meshes[i];
-                var sgMaterial = material as SGMaterial;
+                var meshMaterialPair = this.GizmoModel.Meshes[i];
+                var sgMaterial = meshMaterialPair.Material as SGMaterial;
                 GizmoMaterial gizmoMaterial = new GizmoMaterial()
                 {
                     Name = sgMaterial.Name,
                     VertexColor = sgMaterial.Color,
-                    Shader = _shader
                 };
-                GizmoModel.Meshes[i] = (mesh, gizmoMaterial);
+                GizmoModel.Meshes[i].Mesh = meshMaterialPair.Mesh;
+                GizmoModel.Meshes[i].Material = gizmoMaterial;
             }
 
         }
@@ -194,20 +194,26 @@ namespace NewGFXEditor.Editor
         public void RenderGizmo(IRenderDevice renderDevice, LibGFX.Graphics.Camera camera, Viewport viewport)
         {
             // Scale the gizmo based on the camera and viewport
-            this.ScaleGizmo((PerspectiveCamera)camera, viewport, 25.0f);
+            this.ScaleGizmo((PerspectiveCamera)camera, viewport);
 
             // Render the gizmo with the actual shader
             if (!this.Enabled)
                 return;
 
             renderDevice.SetProjectionMatrix(camera.GetProjectionMatrix(viewport));
-            foreach (var (mesh, material) in this.GizmoModel.Meshes)
+
+            using (_shader.Begin(renderDevice))
             {
-                material.Use(renderDevice);
-                renderDevice.DrawMesh(this.Transform, mesh);
-                material.Disable(renderDevice);
+                foreach (var meshMaterialPair in this.GizmoModel.Meshes)
+                {
+                    var mesh = meshMaterialPair.Mesh;
+                    var material = meshMaterialPair.Material;
+                    using(material.Begin(renderDevice))
+                    {
+                        renderDevice.DrawMesh(this.Transform, mesh);
+                    }
+                }
             }
-            renderDevice.UnbindShaderProgram();
         }
 
         /// <summary>
@@ -236,8 +242,10 @@ namespace NewGFXEditor.Editor
             IMaterial hoveredMaterial = null;
 
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
-            foreach (var (mesh, material) in this.GizmoModel.Meshes)
+            foreach (var meshMaterialPair in this.GizmoModel.Meshes)
             {
+                var mesh = meshMaterialPair.Mesh;
+                var material = meshMaterialPair.Material;
                 AABB worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
                 float min, max;
                 var hit = MeshRaycast.IntersectsAABB(ray, worldAABB, out min, out max);
@@ -294,8 +302,9 @@ namespace NewGFXEditor.Editor
             bool hitSomething = false;
 
             var ray = MeshRaycast.ScreenPointToWorldRay(camera, viewport, mouseX, mouseY);
-            foreach (var (mesh, material) in this.GizmoModel.Meshes)
+            foreach (var meshMaterialPair in this.GizmoModel.Meshes)
             {
+                var mesh = meshMaterialPair.Mesh;
                 var worldAABB = AABB.TransformAABB(mesh.Bounds, this.Transform.GetMatrix());
 
                 float min, max;
@@ -553,9 +562,9 @@ namespace NewGFXEditor.Editor
         /// </summary>
         private void UnhoverMaterials()
         {
-            foreach (var (mesh, material) in this.GizmoModel.Meshes)
+            foreach (var meshMaterialPair in this.GizmoModel.Meshes)
             {
-                var mat = (GizmoMaterial)material;
+                var mat = (GizmoMaterial)meshMaterialPair.Material;
                 mat.Hovered = false;
             }
         }
@@ -566,8 +575,8 @@ namespace NewGFXEditor.Editor
         /// <param name="id"></param>
         private void HoverMaterial(int id)
         {
-            var (mesh, material) = this.GizmoModel.Meshes[id];
-            var gizmoMaterial = (GizmoMaterial)material;
+            var meshMaterialPair = this.GizmoModel.Meshes[id];
+            var gizmoMaterial = (GizmoMaterial)meshMaterialPair.Material;
             gizmoMaterial.Hovered = true;
         }
 
