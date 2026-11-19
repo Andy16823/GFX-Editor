@@ -148,6 +148,7 @@ namespace NewGFXEditor.Editor
         private float _rotationSnapRemainder = 0f;
         private float _scaleSnapRemainder = 0f;
         private GizmoShader _shader;
+        private Vector2 _prevMousePos = Vector2.Zero;
 
         /// <summary>
         /// Constructor for the Gizmo class.
@@ -339,8 +340,9 @@ namespace NewGFXEditor.Editor
         /// Prepares the current instance for performing an action.
         /// Such as moving, scaling, or rotating along the active axis.
         /// </summary>
-        public void PrepareForAction()
+        public void PrepareForAction(Vector2 mousePosition)
         {
+            _prevMousePos = mousePosition;
             _unsnappedPosition = this.Transform.Position;
             _rotationSnapRemainder = 0.0f;
             _scaleSnapRemainder = 0.0f;
@@ -351,8 +353,26 @@ namespace NewGFXEditor.Editor
         /// </summary>
         public void ReleaseGizmo()
         {
+            _prevMousePos = Vector2.Zero;
             this.ActiveAxis = GizmoActiveAxis.None;
             GizmoUpdated?.Invoke(this);
+        }
+
+        public void MoveGizmo(PerspectiveCamera camera, Viewport viewport, int currMouseX, int currMouseY)
+        {
+            if (this.Type == GizmoType.Translation)
+            {
+                this.MoveAlongAxis2D(camera, viewport, (int)_prevMousePos.X, (int)_prevMousePos.Y, currMouseX, currMouseY);
+            }
+            else if (this.Type == GizmoType.Scale)
+            {
+                this.ScaleAlongAxis(camera, viewport, (int)_prevMousePos.X, (int)_prevMousePos.Y, currMouseX, currMouseY);
+            }
+            else if (this.Type == GizmoType.Rotation)
+            {
+                this.RotateAlongAxis(camera, viewport, (int)_prevMousePos.X, (int)_prevMousePos.Y, currMouseX, currMouseY);
+            }
+            _prevMousePos = new Vector2(currMouseX, currMouseY);
         }
 
         /// <summary>

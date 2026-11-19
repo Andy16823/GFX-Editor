@@ -55,6 +55,7 @@ namespace NewGFXEditor
         private Transform _debugSphereTransform = new Transform();
         private bool _showDebugSphere = false;
 
+
         /// <summary>
         /// Initializes a new instance of the Form1 class and sets up the 3D editor panel and related event handlers.
         /// </summary>
@@ -342,19 +343,7 @@ namespace NewGFXEditor
             bool setNewMousePos = false;
             if (TransformGizmo.ActiveAxis != GizmoActiveAxis.None)
             {
-                if (TransformGizmo.Type == GizmoType.Translation)
-                {
-                    TransformGizmo.MoveAlongAxis2D((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, (int)_mousePos.X, (int)_mousePos.Y, e.X, e.Y);
-                }
-                else if (TransformGizmo.Type == GizmoType.Scale)
-                {
-                    TransformGizmo.ScaleAlongAxis((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, (int)_mousePos.X, (int)_mousePos.Y, e.X, e.Y);
-                }
-                else if (TransformGizmo.Type == GizmoType.Rotation)
-                {
-                    TransformGizmo.RotateAlongAxis((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, (int)_mousePos.X, (int)_mousePos.Y, e.X, e.Y);
-                }
-                setNewMousePos = true;
+                TransformGizmo.MoveGizmo((PerspectiveCamera)SelectedCamera, _editorPanel3D.Viewport, e.X, e.Y);
             }
 
             // Rotate the camera
@@ -404,7 +393,7 @@ namespace NewGFXEditor
                     if (gizmoPicked)
                     {
                         _mousePos = new Vector2(e.X, e.Y);
-                        TransformGizmo.PrepareForAction();
+                        TransformGizmo.PrepareForAction(_mousePos);
                     }
                     else
                     {
